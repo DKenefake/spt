@@ -1,3 +1,5 @@
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 use crate::hittable::Hittable;
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
@@ -55,6 +57,7 @@ impl Camera {
             let r = self.get_ray(i, j, &mut prng);
             pixel_color += Self::ray_color(&r, self.max_depth, scene, &mut prng);
         }
+
         pixel_color /= self.samples_per_pixel as f64;
 
         pixel_color.x = linear_to_gamma(pixel_color.x);
@@ -71,13 +74,16 @@ impl Camera {
     pub fn render(&self, scene: &HittableList) {
         let mut screen = Screen::from(self.image_width, self.image_height);
 
+        let mut pixel_locs = Vec::new();
+
         //Render
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                let pixel_color = self.render_pixel(i, j, scene);
-                screen.set(pixel_color, i, j);
+                pixel_locs.push((i,j));
             }
         }
+
+        screen.screen_data = pixel_locs.into_par_iter().map(|(i,j)| self.render_pixel(i, j, scene)).collect();
 
         let path = "output.ppm";
         screen.write(path);
@@ -97,10 +103,10 @@ impl Camera {
 }
 
 pub fn initialize_camera() -> Camera {
-    let image_width = 1280 / 2;
-    let image_height = 720 / 2;
+    let image_width = 1280;
+    let image_height = 720;
     let aspect_ratio = image_width as f64 / image_height as f64;
-    let samples_per_pixel = 5000;
+    let samples_per_pixel = 2000;
     let max_depth = 30;
 
     // Camera

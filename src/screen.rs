@@ -2,7 +2,7 @@ use crate::types::Color;
 use std::io::Write;
 
 pub struct Screen {
-    screen_data: Vec<Color>,
+    pub(crate) screen_data: Vec<Color>,
     width: usize,
     height: usize,
 }
