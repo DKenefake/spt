@@ -1,0 +1,19 @@
+[package]
+name = "spt"
+version = "0.1.0"
+edition = "2024"
+readme = "README.md"
+license = "BSD-3"
+description = "A toy ray tracer written in Rust"
+keywords = ["graphics"]
+categories = ["development-tools"]
+repository = ""
+
+[dependencies]
+glam = "0.30.0"
+smolprng = {version = "0.1.6", features = ["std"]}
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
