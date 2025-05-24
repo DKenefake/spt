@@ -1,9 +1,7 @@
 use crate::hit_record::HitRecord;
-use crate::ray::Ray;
 use crate::interval::Interval;
+use crate::ray::Ray;
 
-pub trait Hittable{
-
+pub trait Hittable {
     fn hit(&self, r: &Ray, i: &Interval) -> Option<HitRecord>;
-
 }

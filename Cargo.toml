@@ -7,7 +7,7 @@ license = "BSD-3"
 description = "A toy ray tracer written in Rust"
 keywords = ["graphics"]
 categories = ["development-tools"]
-repository = ""
+repository = "https://github.com/DKenefake/spt/"
 
 [dependencies]
 glam = "0.30.0"
