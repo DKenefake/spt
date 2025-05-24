@@ -9,6 +9,7 @@ pub mod io;
 pub mod lambertian;
 pub mod material;
 pub mod ray;
+pub mod screen;
 pub mod sphere;
 pub mod types;
 pub mod utility;

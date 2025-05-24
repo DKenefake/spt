@@ -8,6 +8,12 @@ pub fn make_prng_default() -> PRNG<JsfLarge> {
     }
 }
 
+pub fn make_prng_from(seed: u64) -> PRNG<JsfLarge> {
+    PRNG {
+        generator: JsfLarge::from(seed),
+    }
+}
+
 pub fn random_double(prng: &mut PRNG<JsfLarge>) -> f64 {
     prng.gen_f64()
 }
@@ -46,7 +52,7 @@ pub fn sample_lambertian_scatter(normal: &V3, prng: &mut PRNG<JsfLarge>) -> V3 {
 
     if sampled_point.length_squared() <= small_numbers {
         *normal
-    }else{
+    } else {
         sampled_point
     }
 }
@@ -55,8 +61,7 @@ pub fn linear_to_gamma(x: f64) -> f64 {
     if x > 0.0 { x.sqrt() } else { 0.0 }
 }
 
-
-pub fn reflect(v_in: &V3, normal: &V3) -> V3{
+pub fn reflect(v_in: &V3, normal: &V3) -> V3 {
     (v_in - 2.0 * v_in.dot(*normal) * normal).normalize()
 }
 

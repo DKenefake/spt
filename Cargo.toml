@@ -12,6 +12,7 @@ repository = "https://github.com/DKenefake/spt/"
 [dependencies]
 glam = "0.30.0"
 smolprng = {version = "0.1.6", features = ["std"]}
+rayon = "1.10.0"
 
 [profile.release]
 lto = true

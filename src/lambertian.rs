@@ -2,7 +2,9 @@ use crate::hit_record::HitRecord;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::types::Color;
-use crate::utility::{random_double, reflect, refract, sample_lambertian_scatter, sample_unit_vector};
+use crate::utility::{
+    random_double, reflect, refract, sample_lambertian_scatter, sample_unit_vector,
+};
 use smolprng::{JsfLarge, PRNG};
 
 pub struct Lambertian {
@@ -75,9 +77,9 @@ impl Material for Dielectric {
         let cannot_refract = ri * sin_theta > 1.0;
         let is_reflect = self.reflectance(cos_theta) > random_double(prng);
 
-        let direction =  if cannot_refract || is_reflect{
+        let direction = if cannot_refract || is_reflect {
             reflect(&unit_dir, &rec.normal)
-        }else{
+        } else {
             refract(&unit_dir, &rec.normal, ri)
         };
 

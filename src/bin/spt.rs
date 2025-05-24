@@ -53,7 +53,6 @@ fn main() {
         mat_right,
     )));
 
-
     let camera = initialize_camera();
 
     camera.render(&world);

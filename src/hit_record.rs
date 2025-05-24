@@ -30,7 +30,7 @@ impl HitRecord {
 
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: &V3) {
         self.is_front_face = r.direction.dot(*outward_normal) <= 0.0;
-        let coeff = if self.is_front_face {1.0} else {-1.0};
+        let coeff = if self.is_front_face { 1.0 } else { -1.0 };
         self.normal = coeff * outward_normal;
     }
 }

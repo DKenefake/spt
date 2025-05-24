@@ -2,10 +2,10 @@ use crate::hittable::Hittable;
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
+use crate::screen::Screen;
 use crate::types::{Color, P3, V3};
-use crate::utility::{linear_to_gamma, make_prng_default, sample_square};
+use crate::utility::{linear_to_gamma, make_prng_from, sample_square};
 use smolprng::{JsfLarge, PRNG};
-use std::io::Write;
 
 pub struct Camera {
     image_height: usize,
@@ -25,7 +25,6 @@ impl Camera {
         world: &HittableList,
         prng: &mut PRNG<JsfLarge>,
     ) -> Color {
-
         if depth == 0 {
             return Color::ZERO;
         }
@@ -47,44 +46,41 @@ impl Camera {
         (1.0 - a) * Color::ONE + a * Color::new(0.5, 0.7, 1.0)
     }
 
+    pub fn render_pixel(&self, i: usize, j: usize, scene: &HittableList) -> Color {
+        let mut prng = make_prng_from(((i + 1) * (j + 1)) as u64);
+
+        let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+
+        for _ in 0..self.samples_per_pixel {
+            let r = self.get_ray(i, j, &mut prng);
+            pixel_color += Self::ray_color(&r, self.max_depth, scene, &mut prng);
+        }
+        pixel_color /= self.samples_per_pixel as f64;
+
+        pixel_color.x = linear_to_gamma(pixel_color.x);
+        pixel_color.y = linear_to_gamma(pixel_color.y);
+        pixel_color.z = linear_to_gamma(pixel_color.z);
+
+        pixel_color = (255.99 * pixel_color)
+            .floor()
+            .clamp(Color::ZERO, Color::splat(255.0));
+
+        pixel_color
+    }
+
     pub fn render(&self, scene: &HittableList) {
+        let mut screen = Screen::from(self.image_width, self.image_height);
+
         //Render
-
-        let mut prng = make_prng_default();
-
-        let path = "output.ppm";
-
-        let file = std::fs::File::create(path).unwrap();
-        let mut writer = std::io::BufWriter::new(file);
-
-        writeln!(writer, "P3").unwrap();
-        writeln!(writer, "{} {}", self.image_width, self.image_height).unwrap();
-        writeln!(writer, "255").unwrap();
-
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..self.samples_per_pixel {
-                    let r = self.get_ray(i, j, &mut prng);
-                    pixel_color += Self::ray_color(&r, self.max_depth, scene, &mut prng);
-                }
-                pixel_color /= self.samples_per_pixel as f64;
-
-                pixel_color.x = linear_to_gamma(pixel_color.x);
-                pixel_color.y = linear_to_gamma(pixel_color.y);
-                pixel_color.z = linear_to_gamma(pixel_color.z);
-
-                pixel_color = (255.99 * pixel_color)
-                    .floor()
-                    .clamp(Color::ZERO, Color::splat(255.0));
-                writeln!(
-                    writer,
-                    "{} {} {}",
-                    pixel_color.x, pixel_color.y, pixel_color.z
-                )
-                .unwrap();
+                let pixel_color = self.render_pixel(i, j, scene);
+                screen.set(pixel_color, i, j);
             }
         }
+
+        let path = "output.ppm";
+        screen.write(path);
     }
 
     pub fn get_ray(&self, i: usize, j: usize, prng: &mut PRNG<JsfLarge>) -> Ray {
