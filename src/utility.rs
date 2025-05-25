@@ -62,12 +62,12 @@ pub fn linear_to_gamma(x: f64) -> f64 {
 }
 
 pub fn reflect(v_in: &V3, normal: &V3) -> V3 {
-    (v_in - 2.0 * v_in.dot(*normal) * normal).normalize()
+    v_in - 2.0 * v_in.dot(*normal) * normal
 }
 
 pub fn refract(uv: &V3, normal: &V3, ri: f64) -> V3 {
     let cos_theta = normal.dot(-uv).min(1.0);
     let r_out_perp = ri * (uv + cos_theta * normal);
     let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * normal;
-    (r_out_perp + r_out_parallel).normalize()
+    r_out_perp + r_out_parallel
 }

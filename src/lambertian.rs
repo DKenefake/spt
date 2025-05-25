@@ -57,6 +57,13 @@ impl Dielectric {
         r0 = r0 * r0;
         (1.0 - r0).mul_add((1.0 - cos).powi(5), r0)
     }
+
+    pub fn fresnel_reflectance(&self, cos: f64) -> f64{
+        //https://www.photometric.io/blog/improving-schlicks-approximation/
+        let mut r0 = (1.0 - self.refraction_index) / (1.0 + self.refraction_index);
+        r0 = r0 * r0;
+        (1.0 - cos - r0).mul_add((1.0 - cos).powi(4), r0)
+    }
 }
 
 impl Material for Dielectric {
@@ -75,7 +82,7 @@ impl Material for Dielectric {
         let sin_theta = cos_theta.mul_add(-cos_theta, 1.0).sqrt();
 
         let cannot_refract = ri * sin_theta > 1.0;
-        let is_reflect = self.reflectance(cos_theta) > random_double(prng);
+        let is_reflect = self.fresnel_reflectance(cos_theta) > random_double(prng);
 
         let direction = if cannot_refract || is_reflect {
             reflect(&unit_dir, &rec.normal)

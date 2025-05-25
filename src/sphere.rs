@@ -8,9 +8,9 @@ use crate::types::{Color, P3};
 use std::sync::Arc;
 
 pub struct Sphere {
-    center: P3,
-    radius: f64,
-    mat: Arc<dyn Material>,
+    pub center: P3,
+    pub radius: f64,
+    pub mat: Arc<dyn Material>,
 }
 
 impl Sphere {
@@ -59,7 +59,7 @@ impl Hittable for Sphere {
         }
 
         let p = r.at(root);
-        let outward_normal = ((p - self.center) / self.radius).normalize();
+        let outward_normal = (p - self.center) / self.radius;
         let mut hr = HitRecord::from(p, outward_normal, root, self.mat.clone(), true);
         hr.set_face_normal(r, &outward_normal);
 
