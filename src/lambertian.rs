@@ -12,11 +12,12 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
+    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
         let scatter_direction = sample_lambertian_scatter(&rec.normal, prng);
         let scattered = Ray {
             origin: rec.p,
             direction: scatter_direction.normalize(),
+            time: r.time
         };
         let attenuation = self.albedo;
         (true, scattered, attenuation)
@@ -36,6 +37,7 @@ impl Material for Metal {
         let scattered = Ray {
             origin: rec.p,
             direction: reflected,
+            time: r.time
         };
         let attenuation = self.albedo;
 
@@ -67,7 +69,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, _r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
+    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
         let attenuation = Color::ONE;
 
         let ri = if rec.is_front_face {
@@ -76,7 +78,7 @@ impl Material for Dielectric {
             self.refraction_index
         };
 
-        let unit_dir = _r.direction.normalize();
+        let unit_dir = r.direction.normalize();
 
         let cos_theta = rec.normal.dot(-unit_dir).min(1.0);
         let sin_theta = cos_theta.mul_add(-cos_theta, 1.0).sqrt();
@@ -93,6 +95,7 @@ impl Material for Dielectric {
         let scattered = Ray {
             origin: rec.p,
             direction,
+            time: r.time
         };
 
         (true, scattered, attenuation)

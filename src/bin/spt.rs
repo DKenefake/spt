@@ -2,8 +2,9 @@ use spt::camera::initialize_camera;
 use spt::hittable_list::HittableList;
 use spt::lambertian::{Dielectric, Lambertian, Metal};
 use spt::sphere::Sphere;
-use spt::types::{Color, P3};
+use spt::types::{Color, P3, V3};
 use std::sync::Arc;
+use spt::ray::Ray;
 use spt::utility::{make_prng_default, random_double, random_double_in_range};
 
 fn main() {
@@ -11,7 +12,7 @@ fn main() {
     let mut world = HittableList::new();
 
     let ground_material = Arc::new(Lambertian{albedo: Color::new(0.5, 0.5, 0.5)});
-    world.add(Box::new(Sphere::from(P3::new(0.0, -1000.0, 0.0), 1000.0, ground_material)));
+    world.add(Box::new(Sphere::static_sphere(P3::new(0.0, -1000.0, 0.0), 1000.0, ground_material)));
 
     let mut prng = make_prng_default();
 
@@ -30,7 +31,8 @@ fn main() {
                     let b = random_double(& mut prng);
                     let albedo = Color::new(r*r, g*g, b*b);
                     let sphere_mat = Arc::new(Lambertian{albedo});
-                    world.add(Box::new(Sphere::from(center, 0.2, sphere_mat)))
+                    let center_2 = center + V3::new(0.0, 0.5*random_double(& mut prng), 0.0);
+                    world.add(Box::new(Sphere::from(Ray::from(&center, &(center_2 - center), 0.0), 0.2, sphere_mat)))
                 } else if choose_mat <= 0.95 {
                     let r = random_double_in_range(& mut prng, 0.5, 1.0);
                     let g = random_double_in_range(& mut prng, 0.5, 1.0);
@@ -38,10 +40,10 @@ fn main() {
                     let albedo = Color::new(r, g, b);
                     let fuzz = random_double_in_range(& mut prng, 0.0, 0.5);
                     let sphere_mat = Arc::new(Metal{albedo, fuzz});
-                    world.add(Box::new(Sphere::from(center, 0.2, sphere_mat)))
+                    world.add(Box::new(Sphere::static_sphere(center, 0.2, sphere_mat)))
                 } else{
                     let sphere_mat = Arc::new(Dielectric{refraction_index: 1.5});
-                    world.add(Box::new(Sphere::from(center, 0.2, sphere_mat)))
+                    world.add(Box::new(Sphere::static_sphere(center, 0.2, sphere_mat)))
                 }
 
             }
@@ -53,9 +55,9 @@ fn main() {
     let mat_2 = Arc::new(Lambertian{albedo: Color::new(0.4, 0.2, 0.1)});
     let mat_3 = Arc::new(Metal{albedo: Color::new(0.7, 0.6, 0.5), fuzz: 0.0});
 
-    world.add(Box::new(Sphere::from(P3::new(0.0, 1.0, 0.0), 1.0, mat_1)));
-    world.add(Box::new(Sphere::from(P3::new(-4.0, 1.0, 0.0), 1.0, mat_2)));
-    world.add(Box::new(Sphere::from(P3::new(4.0, 1.0, 0.0), 1.0, mat_3)));
+    world.add(Box::new(Sphere::static_sphere(P3::new(0.0, 1.0, 0.0), 1.0, mat_1)));
+    world.add(Box::new(Sphere::static_sphere(P3::new(-4.0, 1.0, 0.0), 1.0, mat_2)));
+    world.add(Box::new(Sphere::static_sphere(P3::new(4.0, 1.0, 0.0), 1.0, mat_3)));
 
 
     // let mat_ground = Arc::new(Lambertian {

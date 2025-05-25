@@ -6,7 +6,7 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::screen::Screen;
 use crate::types::{Color, P3, V3};
-use crate::utility::{linear_to_gamma, make_prng_from, sample_square, sample_unit_disc};
+use crate::utility::{linear_to_gamma, make_prng_from, random_double, sample_square, sample_unit_disc};
 use smolprng::{JsfLarge, PRNG};
 
 pub struct Camera {
@@ -107,7 +107,9 @@ impl Camera {
         let ray_origin = if self.defocus_angle <= 0.0 {self.camera_center} else {self.defocus_disk_sample(prng)};
         let ray_direction = pixel_sample - ray_origin;
 
-        Ray::from(&ray_origin, &ray_direction)
+        let ray_time = random_double(prng);
+
+        Ray::from(&ray_origin, &ray_direction, ray_time)
     }
 
     pub fn defocus_disk_sample(&self, prng: &mut PRNG<JsfLarge>) -> V3{
@@ -121,7 +123,7 @@ pub fn initialize_camera() -> Camera {
     let image_height = 500;
     let aspect_ratio = image_width as f64 / image_height as f64;
     let samples_per_pixel = 500;
-    let max_depth = 10;
+    let max_depth = 50;
     let fov = 20.0f64;
 
     // camera point set up

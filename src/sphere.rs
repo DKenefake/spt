@@ -4,11 +4,11 @@ use crate::interval::Interval;
 use crate::lambertian::Lambertian;
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::types::{Color, P3};
+use crate::types::{Color, P3, V3};
 use std::sync::Arc;
 
 pub struct Sphere {
-    pub center: P3,
+    pub center: Ray,
     pub radius: f64,
     pub mat: Arc<dyn Material>,
 }
@@ -16,7 +16,7 @@ pub struct Sphere {
 impl Sphere {
     pub fn new() -> Self {
         Self {
-            center: P3::ZERO,
+            center: Ray::new(),
             radius: 1.0,
             mat: Arc::new(Lambertian {
                 albedo: Color::new(0.5, 0.5, 0.5),
@@ -24,9 +24,17 @@ impl Sphere {
         }
     }
 
-    pub fn from(center: P3, radius: f64, mat: Arc<dyn Material>) -> Self {
+    pub fn from(center: Ray, radius: f64, mat: Arc<dyn Material>) -> Self {
         Self {
             center,
+            radius,
+            mat,
+        }
+    }
+
+    pub fn static_sphere(center: P3, radius: f64, mat: Arc<dyn Material>) -> Self{
+        Self {
+            center: Ray{ origin: center, direction: V3::ZERO, time: 0.0f64},
             radius,
             mat,
         }
@@ -35,7 +43,10 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, i: &Interval) -> Option<HitRecord> {
-        let oc = self.center - r.origin;
+
+        let current_center = self.center.at(r.time);
+
+        let oc = current_center - r.origin;
 
         let a = r.direction.length_squared();
         let h = r.direction.dot(oc);
@@ -59,7 +70,7 @@ impl Hittable for Sphere {
         }
 
         let p = r.at(root);
-        let outward_normal = (p - self.center) / self.radius;
+        let outward_normal = (p - current_center) / self.radius;
         let mut hr = HitRecord::from(p, outward_normal, root, self.mat.clone(), true);
         hr.set_face_normal(r, &outward_normal);
 

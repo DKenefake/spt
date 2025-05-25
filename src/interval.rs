@@ -1,3 +1,4 @@
+#[derive(Copy, Clone)]
 pub struct Interval {
     pub(crate) min: f64,
     pub(crate) max: f64,
@@ -25,6 +26,11 @@ impl Interval {
 
     pub fn surrounds(&self, x: f64) -> bool {
         self.min < x && x < self.max
+    }
+
+    pub fn expand(&self, delta: f64) -> Self{
+        let padding = delta / 2.0;
+        Self{min: self.min - padding, max: self.max + padding}
     }
 
     pub const fn clamp(&self, x: f64) -> f64 {

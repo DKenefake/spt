@@ -3,6 +3,7 @@ use crate::types::{P3, V3};
 pub struct Ray {
     pub origin: P3,
     pub direction: V3,
+    pub time: f64
 }
 
 impl Ray {
@@ -10,13 +11,15 @@ impl Ray {
         Self {
             origin: P3::ZERO,
             direction: V3::X,
+            time: 0.0,
         }
     }
 
-    pub const fn from(origin: &P3, direction: &V3) -> Self {
+    pub const fn from(origin: &P3, direction: &V3, time: f64) -> Self {
         Self {
             origin: *origin,
             direction: *direction,
+            time
         }
     }
 
