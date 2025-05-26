@@ -1,7 +1,7 @@
 use spt::bvh::BVHNode;
 use spt::camera::initialize_camera;
 use spt::hittable_list::HittableList;
-use spt::lambertian::{Dielectric, Lambertian, Metal};
+use spt::lambertian::{Dielectric, DiffuseLight, Lambertian, Metal};
 use spt::ray::Ray;
 use spt::sphere::Sphere;
 use spt::texture::{CheckerTexture, SolidColor};
@@ -9,9 +9,72 @@ use spt::types::{Color, P3, V3};
 use spt::utility::{make_prng_default, random_double, random_double_in_range};
 use std::sync::Arc;
 use std::time::Instant;
+use glam::DVec3;
+use spt::quad::Quad;
 
-fn main() {
-    // World
+
+fn quad_scene(){
+    fn camera_set_up() -> (usize, usize, usize, usize, f64, DVec3, DVec3, DVec3, f64, f64) {
+        let image_width = 400;
+        let image_height = 400;
+        let samples_per_pixel = 1000;
+        let max_depth = 50;
+        let fov = 80.0f64;
+        let look_from = P3::new(0.0, 0.0, 9.0);
+        let look_at = P3::new(0.0, 0.0, 0.0);
+        let v_up = V3::new(0.0, 1.0, 0.0);
+
+        let defocus_angle = 0.0;
+        let focus_dist = 10.4;
+        (image_width, image_height, samples_per_pixel, max_depth, fov, look_from, look_at, v_up, defocus_angle, focus_dist)
+    }
+
+    let mut world = HittableList::new();
+
+    let left_red = Arc::new(Lambertian::from_color(Color::new(1.0, 0.2, 0.2)));
+    let back_green    = Arc::new(Lambertian::from_color(Color::new(0.2, 1.0, 0.2)));
+    let right_blue    = Arc::new(Lambertian::from_color(Color::new(0.2, 0.2, 1.0)));
+    let upper_orange  = Arc::new(Lambertian::from_color(Color::new(1.0, 0.5, 0.0)));
+    let lower_teal    = Arc::new(Lambertian::from_color(Color::new(0.2, 0.8, 0.8)));
+
+
+    world.add(Box::new(Quad::new(P3::new(-3.0, -2.0, 5.0), -4.0*V3::Z, 4.0*V3::Y, left_red)));
+    world.add(Box::new(Quad::new(P3::new(-2.0, -2.0, 0.0), 4.0*V3::X, 4.0*V3::Y, back_green)));
+    world.add(Box::new(Quad::new(P3::new(3.0, -2.0, 1.0), 4.0*V3::Z, 4.0*V3::Y, right_blue)));
+    world.add(Box::new(Quad::new(P3::new(-2.0, 3.0, 1.0), 4.0*V3::X, 4.0*V3::Z, upper_orange)));
+    world.add(Box::new(Quad::new(P3::new(-2.0, -3.0, 5.0), 4.0*V3::X, -4.0*V3::Z, lower_teal)));
+
+    let world_bvh = BVHNode::from(&mut world.objects);
+
+    let camera = initialize_camera(camera_set_up());
+
+    let light_mat = Arc::new(DiffuseLight::from_color(Color::ONE*10.5));
+
+    let light_sphere = Arc::new(Sphere::static_sphere(V3::ZERO, 0.1, light_mat));
+
+    camera.render(&world_bvh, light_sphere);
+
+}
+
+
+fn bouncing_balls(){
+
+    fn camera_set_up() -> (usize, usize, usize, usize, f64, DVec3, DVec3, DVec3, f64, f64) {
+        let image_width = 1200;
+        let image_height = 500;
+        let samples_per_pixel = 150;
+        let max_depth = 15;
+        let fov = 20.0f64;
+
+        let look_from = P3::new(13.0, 2.0, 3.0);
+        let look_at = P3::new(0.0, 0.0, 0.0);
+        let v_up = V3::new(0.0, 1.0, 0.0);
+
+        let defocus_angle = 0.2;
+        let focus_dist = 10.0;
+        (image_width, image_height, samples_per_pixel, max_depth, fov, look_from, look_at, v_up, defocus_angle, focus_dist)
+    }
+
     let mut world = HittableList::new();
 
     let checker = Lambertian::from_texture(Arc::new(CheckerTexture {
@@ -97,20 +160,29 @@ fn main() {
         1.0,
         mat_3,
     )));
-
     let world_bvh = BVHNode::from(&mut world.objects);
 
-    let camera = initialize_camera();
+    let camera = initialize_camera(camera_set_up());
+
+    let light_mat = Arc::new(DiffuseLight::from_color(Color::ONE*10.5));
+
+    let light_sphere = Arc::new(Sphere::static_sphere(V3::ZERO, 0.1, light_mat));
+
+    camera.render(&world_bvh, light_sphere);
+
+}
+
+
+fn main() {
+    // World
+
+
+
+
 
     let now = Instant::now();
 
-    // 87.5053476 secs
-    // Done Running!
-
-    // 4.5106428 secs
-    // Done Running!
-
-    camera.render(&world_bvh);
+    bouncing_balls();
 
     let stop = Instant::now();
 

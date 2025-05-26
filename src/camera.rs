@@ -1,3 +1,5 @@
+use std::sync::Arc;
+use glam::DVec3;
 use crate::bvh::BVHNode;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
@@ -10,6 +12,8 @@ use crate::utility::{
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use smolprng::{JsfLarge, PRNG};
+use crate::material::ScatterRay;
+use crate::pdf::PDF;
 
 pub struct Camera {
     image_height: usize,
@@ -37,8 +41,10 @@ impl Camera {
         r: &Ray,
         depth: usize,
         world: &BVHNode,
+        lights: &Arc<dyn Hittable>,
         prng: &mut PRNG<JsfLarge>,
     ) -> Color {
+
         if depth == 0 {
             return Color::ZERO;
         }
@@ -51,31 +57,57 @@ impl Camera {
 
         let rec = hit_rec.unwrap();
 
-        let color_from_emission = rec.material.emitted(rec.u, rec.v, &rec.p);
+        let color_from_emission = rec.material.emitted(r, &rec, rec.u, rec.v, &rec.p);
 
         let scatter_attempt = rec.material.scatter(r, &rec, prng);
 
-        if scatter_attempt.is_none() {
-            return color_from_emission;
-        }
-
         match scatter_attempt {
             None => color_from_emission,
-            Some((sray, scolor)) => {
-                let color_from_scatter = scolor * self.ray_color(&sray, depth - 1, world, prng);
-                color_from_scatter + color_from_emission
+            Some(scatter) => {
+                match scatter {
+                    ScatterRay::Specular { specular_ray, attenuation } => {
+                        attenuation * self.ray_color(&specular_ray, depth - 1, world, lights, prng)
+                    }
+                    ScatterRay::Scatter { pdf, attenuation } => {
+                        let light_pdf = PDF::hittable(lights, &rec.p);
+                        let p = PDF::mixture(&light_pdf, &pdf);
+
+                        let scattered = Ray::from(&rec.p, &p.generate(r.time, prng), r.time);
+                        let pdf_value = p.value(&scattered.direction, r.time, prng);
+
+                        let sample_color = self.ray_color(&scattered, depth - 1, world, lights, prng);
+                        let color_from_scatter = attenuation * pdf_value * sample_color / pdf_value;
+                        color_from_emission + color_from_scatter
+                    }
+                }
             }
         }
+
     }
 
-    pub fn render_pixel(&self, i: usize, j: usize, scene: &BVHNode) -> Color {
+    pub fn render_pixel(&self, i: usize, j: usize, scene: &BVHNode, lights: &Arc<dyn Hittable>) -> Color {
         let mut prng = make_prng_from(((i + 1) * (j + 1)) as u64);
 
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
 
         for _ in 0..self.samples_per_pixel {
             let r = self.get_ray(i, j, &mut prng);
-            pixel_color += Self::ray_color(self, &r, self.max_depth, scene, &mut prng);
+            let mut in_flight = Self::ray_color(self, &r, self.max_depth, scene, lights, &mut prng);
+
+            if !in_flight.x.is_finite(){
+                in_flight.x = 0.0;
+            }
+
+            if !in_flight.y.is_finite(){
+                in_flight.y = 0.0;
+            }
+
+            if !in_flight.z.is_finite(){
+                in_flight.z = 0.0;
+            }
+
+            pixel_color += in_flight;
+
         }
 
         pixel_color /= self.samples_per_pixel as f64;
@@ -91,7 +123,7 @@ impl Camera {
         pixel_color
     }
 
-    pub fn render(&self, scene: &BVHNode) {
+    pub fn render(&self, scene: &BVHNode, lights: Arc<dyn Hittable>) {
         let mut screen = Screen::from(self.image_width, self.image_height);
 
         let mut pixel_locs = Vec::new();
@@ -105,7 +137,7 @@ impl Camera {
 
         screen.screen_data = pixel_locs
             .into_par_iter()
-            .map(|(i, j)| self.render_pixel(i, j, scene))
+            .map(|(i, j)| self.render_pixel(i, j, scene, &lights))
             .collect();
 
         let path = "output.ppm";
@@ -136,21 +168,11 @@ impl Camera {
     }
 }
 
-pub fn initialize_camera() -> Camera {
-    let image_width = 1200;
-    let image_height = 500;
+pub fn initialize_camera(cam_params: (usize, usize, usize, usize, f64, DVec3, DVec3, DVec3, f64, f64)) -> Camera {
+
+    let (image_width, image_height, samples_per_pixel, max_depth, fov, look_from, look_at, v_up, defocus_angle, focus_dist) = cam_params;
+
     let aspect_ratio = image_width as f64 / image_height as f64;
-    let samples_per_pixel = 1000;
-    let max_depth = 25;
-    let fov = 20.0f64;
-
-    // camera point set up
-    let look_from = P3::new(13.0, 2.0, 3.0);
-    let look_at = P3::new(0.0, 0.0, 0.0);
-    let v_up = V3::new(0.0, 1.0, 0.0);
-
-    let defocus_angle = 0.6;
-    let focus_dist = 10.4;
 
     // Camera
     let theta: f64 = fov.to_radians();
@@ -180,7 +202,7 @@ pub fn initialize_camera() -> Camera {
     let defocus_disk_u = u * defocus_radius;
     let defocus_disk_v = v * defocus_radius;
 
-    let background = Color::new(0.5, 0.5, 0.5);
+    let background = Color::new(0.8, 0.8, 0.8);
 
     Camera {
         image_height,
@@ -202,3 +224,4 @@ pub fn initialize_camera() -> Camera {
         background,
     }
 }
+

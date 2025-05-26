@@ -53,6 +53,24 @@ pub fn sample_unit_vector_on_hemisphere(normal: &V3, prng: &mut PRNG<JsfLarge>) 
     }
 }
 
+pub fn sample_cosine_direction(prng: &mut PRNG<JsfLarge>) -> V3{
+    let r1 = prng.gen_f64();
+    let r2 = prng.gen_f64();
+
+    let phi = 2.0 * std::f64::consts::PI * r1;
+
+    let (phi_sin, phi_cos) = phi.sin_cos();
+
+    let r2_sqrt = r2.sqrt();
+
+    let x = phi_cos * r2_sqrt;
+    let y = phi_sin * r2_sqrt;
+
+    let z = (1.0 - r2).sqrt();
+
+    V3::new(x, y, z)
+}
+
 pub fn sample_lambertian_scatter(normal: &V3, prng: &mut PRNG<JsfLarge>) -> V3 {
     // sample from the lambertian brdf but in a wat that doesn't brick the numerics
     let small_numbers = 1e-8;

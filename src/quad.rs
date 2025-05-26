@@ -8,7 +8,7 @@ use crate::types::{P3, V3};
 use smolprng::{JsfLarge, PRNG};
 use std::sync::Arc;
 
-struct Quad {
+pub struct Quad {
     q: P3,
     u: V3,
     v: V3,
@@ -17,11 +17,13 @@ struct Quad {
     aabb: AABB,
     normal: V3,
     d: f64,
+    area: f64
 }
 
 impl Quad {
     pub fn new(q: P3, u: V3, v: V3, mat: Arc<dyn Material>) -> Self {
         let n = u.cross(v);
+        let area = n.length();
         let normal = n.normalize();
         let d = normal.dot(q);
         let aabb = Self::set_bounding_box(q, u, v);
@@ -35,6 +37,7 @@ impl Quad {
             aabb,
             normal,
             d,
+            area
         }
     }
 
@@ -49,7 +52,7 @@ impl Hittable for Quad {
     fn hit(&self, r: &Ray, i: &Interval, _prng: &mut PRNG<JsfLarge>) -> Option<HitRecord> {
         let denom = self.normal.dot(r.direction);
 
-        // if we are parrallel we never hit
+        // if we are parallel we never hit
         if denom.abs() <= 1E-12 {
             return None;
         }
@@ -84,5 +87,26 @@ impl Hittable for Quad {
 
     fn bounding_box(&self) -> AABB {
         self.aabb
+    }
+
+    fn pdf_value(&self, origin: &P3, dir: &V3, time: f64, prng: &mut PRNG<JsfLarge>) -> f64 {
+
+        let hit = self.hit(&Ray{origin: *origin, direction: *dir, time}, &Interval::casting_default(), prng);
+
+        match hit {
+            None => 0.0,
+            Some(rec) => {
+                let dist_sqarted = rec.t * rec.t * dir.length_squared();
+                let cosine = rec.normal.dot(*dir) / dir.length();
+
+                dist_sqarted / (cosine * self.area)
+            }
+        }
+
+    }
+
+    fn random(&self, origin: &P3, _time:f64, prng: &mut PRNG<JsfLarge>) -> V3 {
+        let p = self.q + prng.gen_f64() * self.u + prng.gen_f64() * self.v;
+        p - origin
     }
 }

@@ -20,6 +20,6 @@ lto = true
 opt-level = 3
 codegen-units = 1
 debug = "full"
-RUSTFLAGS=["-Ctarget-feature=+avx2"]
 
 [build]
+rustflags = "-C target-cpu=native"

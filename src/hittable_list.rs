@@ -4,6 +4,7 @@ use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use smolprng::{JsfLarge, PRNG};
+use crate::types::{P3, V3};
 
 pub struct HittableList {
     pub objects: Vec<Box<dyn Hittable>>,
@@ -63,5 +64,19 @@ impl Hittable for HittableList {
         }
 
         list_aabb
+    }
+
+    fn pdf_value(&self, origin: &P3, dir: &V3, time: f64, prng: &mut PRNG<JsfLarge>) -> f64 {
+        let weight = 1.0 / self.objects.len() as f64;
+        let mut sum = 0.0;
+        for obj in &self.objects{
+            sum += weight * obj.pdf_value(origin, dir, time, prng);
+        }
+        return sum
+    }
+
+    fn random(&self, origin: &P3, time: f64, prng: &mut PRNG<JsfLarge>) -> V3 {
+        let size = self.objects.len();
+        self.objects[prng.gen_u64() as usize % size].random(origin, time, prng)
     }
 }
