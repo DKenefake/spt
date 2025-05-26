@@ -1,6 +1,6 @@
 use crate::aabb::AABB;
 use crate::hit_record::HitRecord;
-use crate::hittable::{CannotHit, Hittable};
+use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use std::cmp::Ordering;

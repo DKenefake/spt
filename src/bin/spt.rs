@@ -8,18 +8,18 @@ use spt::types::{Color, P3, V3};
 use spt::utility::{make_prng_default, random_double, random_double_in_range};
 use std::sync::Arc;
 use std::time::Instant;
+use spt::texture::{CheckerTexture, SolidColor};
 
-fn main() {
+fn bounding_spheres() {
     // World
     let mut world = HittableList::new();
 
-    let ground_material = Arc::new(Lambertian {
-        albedo: Color::new(0.5, 0.5, 0.5),
-    });
+    let checker = Lambertian::from_texture(Arc::new(CheckerTexture{inv_scale: 0.32, even: Arc::new(SolidColor{albedo: Color::new(0.2, 0.3, 0.1)}), odd: Arc::new(SolidColor{albedo: Color::new(0.9, 0.9, 0.9)})}));
+
     world.add(Box::new(Sphere::static_sphere(
         P3::new(0.0, -1000.0, 0.0),
         1000.0,
-        ground_material,
+        Arc::new(checker),
     )));
 
     let mut prng = make_prng_default();
@@ -39,7 +39,7 @@ fn main() {
                     let g = random_double(&mut prng);
                     let b = random_double(&mut prng);
                     let albedo = Color::new(r * r, g * g, b * b);
-                    let sphere_mat = Arc::new(Lambertian { albedo });
+                    let sphere_mat = Arc::new(Lambertian::from_color(albedo));
                     let center_2 = center + V3::new(0.0, 0.5 * random_double(&mut prng), 0.0);
                     world.add(Box::new(Sphere::from(
                         Ray::from(&center, &(center_2 - center), 0.0),
@@ -67,9 +67,8 @@ fn main() {
     let mat_1 = Arc::new(Dielectric {
         refraction_index: 1.5,
     });
-    let mat_2 = Arc::new(Lambertian {
-        albedo: Color::new(0.4, 0.2, 0.1),
-    });
+    let mat_2 = Arc::new(Lambertian::from_color(Color::new(0.4, 0.2, 0.1)));
+
     let mat_3 = Arc::new(Metal {
         albedo: Color::new(0.7, 0.6, 0.5),
         fuzz: 0.0,
@@ -90,50 +89,6 @@ fn main() {
         1.0,
         mat_3,
     )));
-    //
-    // let mat_ground = Arc::new(Lambertian {
-    //     albedo: Color::new(0.8, 0.8, 0.0),
-    // });
-    // let mat_center = Arc::new(Lambertian {
-    //     albedo: Color::new(0.1, 0.2, 0.5),
-    // });
-    // let mat_left = Arc::new(Dielectric {
-    //     refraction_index: 1.5,
-    // });
-    // let mat_bubble = Arc::new(Dielectric {
-    //     refraction_index: 1.0 / 1.5,
-    // });
-    //
-    // let mat_right = Arc::new(Metal {
-    //     albedo: Color::new(0.8, 0.6, 0.2),
-    //     fuzz: 1.00,
-    // });
-    //
-    // world.add(Box::new(Sphere::static_sphere(
-    //     P3::new(0.0, -100.5, -1.0),
-    //     100.0,
-    //     mat_ground,
-    // )));
-    // world.add(Box::new(Sphere::static_sphere(
-    //     P3::new(0.0, 0.0, -1.2),
-    //     0.5,
-    //     mat_center,
-    // )));
-    // world.add(Box::new(Sphere::static_sphere(
-    //     P3::new(-1.0, 0.0, -1.0),
-    //     0.5,
-    //     mat_left,
-    // )));
-    // world.add(Box::new(Sphere::static_sphere(
-    //     P3::new(-1.0, 0.0, -1.0),
-    //     0.4,
-    //     mat_bubble,
-    // )));
-    // world.add(Box::new(Sphere::static_sphere(
-    //     P3::new(1.0, 0.0, -1.0),
-    //     0.5,
-    //     mat_right,
-    // )));
 
     let world_bvh = BVHNode::from(&mut world.objects);
 
@@ -153,3 +108,5 @@ fn main() {
     println!("{} secs", delta);
     println!("Done Running!");
 }
+
+fn main() {}

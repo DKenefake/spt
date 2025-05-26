@@ -13,9 +13,13 @@ repository = "https://github.com/DKenefake/spt/"
 glam = "0.30.0"
 smolprng = {version = "0.1.6", features = ["std"]}
 rayon = "1.10.0"
+image = "0.25.5"
 
 [profile.release]
 lto = true
 opt-level = 3
 codegen-units = 1
-debug = true
+debug = "full"
+RUSTFLAGS=["-Ctarget-feature=+avx2"]
+
+[build]

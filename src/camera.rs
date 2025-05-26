@@ -28,29 +28,33 @@ pub struct Camera {
     w: V3,
     defocus_disk_u: V3,
     defocus_disk_v: V3,
+    background: Color,
 }
 
 impl Camera {
-    pub fn ray_color(r: &Ray, depth: usize, world: &BVHNode, prng: &mut PRNG<JsfLarge>) -> Color {
+    pub fn ray_color(&self, r: &Ray, depth: usize, world: &BVHNode, prng: &mut PRNG<JsfLarge>) -> Color {
         if depth == 0 {
             return Color::ZERO;
         }
 
-        match world.hit(r, &Interval::from(0.001, f64::MAX)) {
-            None => {}
-            Some(hr) => {
-                let (is_so, scattered, attenuation) = hr.material.scatter(r, &hr, prng);
-                return if is_so {
-                    attenuation * Self::ray_color(&scattered, depth - 1, world, prng)
-                } else {
-                    Color::ZERO
-                };
-            }
+        let hit_rec = world.hit(r, &Interval::from(0.001, f64::MAX));
+
+        if hit_rec.is_none(){
+            return self.background;
         }
 
-        let unit_dir = r.direction.normalize();
-        let a = 0.5f64 * (unit_dir.y + 1.0);
-        (1.0 - a) * Color::ONE + a * Color::new(0.5, 0.7, 1.0)
+        let rec = hit_rec.unwrap();
+
+        let color_from_emission = rec.material.emitted(rec.u, rec.v, &rec.p);
+        let (did_scatter, sray, scolor) = rec.material.scatter(r, &rec, prng);
+
+        if ! did_scatter{
+            return color_from_emission;
+        }
+
+        let color_from_scatter = scolor * self.ray_color(&sray, depth - 1, world, prng);
+
+        color_from_scatter + color_from_emission
     }
 
     pub fn render_pixel(&self, i: usize, j: usize, scene: &BVHNode) -> Color {
@@ -60,7 +64,7 @@ impl Camera {
 
         for _ in 0..self.samples_per_pixel {
             let r = self.get_ray(i, j, &mut prng);
-            pixel_color += Self::ray_color(&r, self.max_depth, scene, &mut prng);
+            pixel_color += Self::ray_color(self, &r, self.max_depth, scene, &mut prng);
         }
 
         pixel_color /= self.samples_per_pixel as f64;
@@ -125,7 +129,7 @@ pub fn initialize_camera() -> Camera {
     let image_width = 1200;
     let image_height = 500;
     let aspect_ratio = image_width as f64 / image_height as f64;
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 50;
     let max_depth = 15;
     let fov = 20.0f64;
 
@@ -165,6 +169,8 @@ pub fn initialize_camera() -> Camera {
     let defocus_disk_u = u * defocus_radius;
     let defocus_disk_v = v * defocus_radius;
 
+    let background = Color::new(0.5, 0.5, 0.5);
+
     Camera {
         image_height,
         image_width,
@@ -182,5 +188,6 @@ pub fn initialize_camera() -> Camera {
         w,
         defocus_disk_u,
         defocus_disk_v,
+        background,
     }
 }

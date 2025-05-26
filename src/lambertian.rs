@@ -1,14 +1,28 @@
+use std::sync::Arc;
 use crate::hit_record::HitRecord;
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::types::Color;
+use crate::types::{Color, P3};
 use crate::utility::{
     random_double, reflect, refract, sample_lambertian_scatter, sample_unit_vector,
 };
+use crate::texture::{SolidColor, Texture};
 use smolprng::{JsfLarge, PRNG};
 
 pub struct Lambertian {
-    pub albedo: Color,
+    pub tex: Arc<dyn Texture>,
+}
+
+impl Lambertian{
+
+    pub fn from_color(c: Color) -> Self{
+        Self{tex: Arc::new(SolidColor{albedo: c})}
+    }
+
+    pub fn from_texture(tex: Arc<dyn Texture>) -> Self{
+        Self{tex}
+    }
+
 }
 
 impl Material for Lambertian {
@@ -19,7 +33,7 @@ impl Material for Lambertian {
             direction: scatter_direction.normalize(),
             time: r.time,
         };
-        let attenuation = self.albedo;
+        let attenuation = self.tex.value(rec.u, rec.v,  &rec.p);
         (true, scattered, attenuation)
     }
 }
@@ -99,5 +113,31 @@ impl Material for Dielectric {
         };
 
         (true, scattered, attenuation)
+    }
+}
+
+
+struct DiffuseLight{
+    tex: Arc<dyn Texture>
+}
+
+impl DiffuseLight{
+
+    pub fn from_texture(tex: Arc<dyn Texture>) -> Self{
+        Self{tex}
+    }
+
+    pub fn from_color(c: Color) -> Self{
+        Self{tex: Arc::new(SolidColor{albedo: c})}
+    }
+}
+
+impl Material for DiffuseLight{
+    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
+        (false, Ray::new(), Color::ZERO)
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: &P3) -> Color {
+        self.tex.value(u, v, p)
     }
 }

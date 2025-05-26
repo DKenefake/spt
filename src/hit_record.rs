@@ -9,6 +9,8 @@ pub struct HitRecord {
     pub normal: V3,
     pub material: Arc<dyn Material>,
     pub(crate) t: f64,
+    pub(crate) u: f64,
+    pub(crate) v: f64,
     pub(crate) is_front_face: bool,
 }
 
@@ -17,6 +19,8 @@ impl HitRecord {
         p: P3,
         normal: V3,
         t: f64,
+        u: f64,
+        v: f64,
         material: Arc<dyn Material>,
         is_front_face: bool,
     ) -> Self {
@@ -25,6 +29,8 @@ impl HitRecord {
             normal,
             material,
             t,
+            u,
+            v,
             is_front_face,
         }
     }

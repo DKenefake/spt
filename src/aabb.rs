@@ -16,25 +16,25 @@ impl AABB {
         }
     }
 
-    pub const fn from(x: Interval, y: Interval, z: Interval) -> Self {
+    pub fn from(x: Interval, y: Interval, z: Interval) -> Self {
         Self {
             min: V3::new(x.min, y.min, z.min),
             max: V3::new(x.max, y.max, z.max),
-        }
+        }.pad_to_minimums()
     }
 
     pub fn from_points(a: P3, b: P3) -> Self {
         Self {
             min: a.min(b),
             max: a.max(b),
-        }
+        }.pad_to_minimums()
     }
 
     pub fn from_aabbs(a: &Self, b: &Self) -> Self {
         Self {
             min: a.min.min(b.min),
             max: a.max.max(b.max),
-        }
+        }.pad_to_minimums()
     }
 
     pub const fn get_axis_interval(&self, n: usize) -> Interval {
@@ -59,6 +59,27 @@ impl AABB {
         let t_max = t0.max(t1);
 
         t_min.max_element().max(i.min) <= t_max.min_element().min(i.max)
+    }
+
+    fn pad_to_minimums(mut self) -> Self{
+        let epsilon = 0.00001;
+
+        let delta = self.max - self.min;
+
+        if delta.x <= epsilon{
+            self.min.x -= epsilon / 2.0;
+            self.min.x += epsilon / 2.0;
+        }
+        if delta.y <= epsilon{
+            self.min.y -= epsilon / 2.0;
+            self.min.y += epsilon / 2.0;
+        }
+        if delta.z <= epsilon{
+            self.min.z -= epsilon / 2.0;
+            self.min.z += epsilon / 2.0;
+        }
+
+        Self{min: self.min, max: self.max}
     }
 }
 

@@ -21,9 +21,7 @@ impl Sphere {
         Self {
             center: Ray::new(),
             radius: 1.0,
-            mat: Arc::new(Lambertian {
-                albedo: Color::new(0.5, 0.5, 0.5),
-            }),
+            mat: Arc::new(Lambertian::from_color(Color::new(0.5, 0.5, 0.5))),
             aabb: AABB::from_points(-P3::ONE, P3::ONE),
         }
     }
@@ -55,6 +53,15 @@ impl Sphere {
             mat,
             aabb: AABB::from_points(center - r_vec, center + r_vec),
         }
+    }
+
+    fn get_sphere_uv(p: &P3) -> (f64, f64){
+        let theta = (-p.y).acos();
+        let phi = (-p.z).atan2(p.x) + std::f64::consts::PI;
+
+        let u = phi / (2.0 *  std::f64::consts::PI);
+        let v = theta / std::f64::consts::PI;
+        (u,v)
     }
 }
 
@@ -88,7 +95,13 @@ impl Hittable for Sphere {
 
         let p = r.at(root);
         let outward_normal = (p - current_center) / self.radius;
-        let mut hr = HitRecord::from(p, outward_normal, root, self.mat.clone(), true);
+        let mut hr = HitRecord::from(p, outward_normal, root, 0.0, 0.0, self.mat.clone(), true);
+
+        let (u, v) = Self::get_sphere_uv(&p);
+
+        hr.u = u;
+        hr.v = v;
+
         hr.set_face_normal(r, &outward_normal);
 
         Some(hr)
