@@ -4,9 +4,16 @@ use crate::types::{Color, P3};
 use smolprng::{JsfLarge, PRNG};
 
 pub trait Material: Send + Sync {
-    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color);
+    fn scatter(
+        &self,
+        _r: &Ray,
+        _rec: &HitRecord,
+        _prng: &mut PRNG<JsfLarge>,
+    ) -> Option<(Ray, Color)> {
+        None
+    }
 
-    fn emitted(&self, u: f64, b: f64, p: &P3) -> Color{
+    fn emitted(&self, _u: f64, _b: f64, _p: &P3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
 }

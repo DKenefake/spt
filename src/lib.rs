@@ -1,4 +1,4 @@
-#![warn(clippy::all, clippy::cargo, clippy::nursery)]
+#![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::perf)]
 
 pub mod aabb;
 pub mod bvh;
@@ -10,10 +10,14 @@ pub mod interval;
 pub mod io;
 pub mod lambertian;
 pub mod material;
+pub mod medium;
+pub mod perlin;
+pub mod quad;
 pub mod ray;
+pub mod rotate;
 pub mod screen;
 pub mod sphere;
+pub mod texture;
+pub mod translate;
 pub mod types;
 pub mod utility;
-pub mod texture;
-pub mod quad;

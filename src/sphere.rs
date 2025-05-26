@@ -6,6 +6,7 @@ use crate::lambertian::Lambertian;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::types::{Color, P3, V3};
+use smolprng::{JsfLarge, PRNG};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -55,18 +56,18 @@ impl Sphere {
         }
     }
 
-    fn get_sphere_uv(p: &P3) -> (f64, f64){
+    fn get_sphere_uv(p: &P3) -> (f64, f64) {
         let theta = (-p.y).acos();
         let phi = (-p.z).atan2(p.x) + std::f64::consts::PI;
 
-        let u = phi / (2.0 *  std::f64::consts::PI);
+        let u = phi / (2.0 * std::f64::consts::PI);
         let v = theta / std::f64::consts::PI;
-        (u,v)
+        (u, v)
     }
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: &Ray, i: &Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, i: &Interval, _prng: &mut PRNG<JsfLarge>) -> Option<HitRecord> {
         let current_center = self.center.at(r.time);
 
         let oc = current_center - r.origin;

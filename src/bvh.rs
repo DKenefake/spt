@@ -3,6 +3,7 @@ use crate::hit_record::HitRecord;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
+use smolprng::{JsfLarge, PRNG};
 use std::cmp::Ordering;
 use std::sync::Arc;
 
@@ -88,12 +89,12 @@ impl BVHNode {
 }
 
 impl Hittable for BVHNode {
-    fn hit(&self, r: &Ray, i: &Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, i: &Interval, prng: &mut PRNG<JsfLarge>) -> Option<HitRecord> {
         if !self.bounding_box.hit(r, i) {
             return None;
         }
 
-        let hit_left = self.left.hit(r, i);
+        let hit_left = self.left.hit(r, i, prng);
 
         let t = if let Some(record) = hit_left.clone() {
             record.t
@@ -101,7 +102,7 @@ impl Hittable for BVHNode {
             i.max
         };
 
-        let hit_right = self.right.hit(r, &Interval::from(i.min, t));
+        let hit_right = self.right.hit(r, &Interval::from(i.min, t), prng);
 
         hit_right.or(hit_left)
     }

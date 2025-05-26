@@ -1,40 +1,40 @@
-use std::sync::Arc;
 use crate::hit_record::HitRecord;
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::texture::{SolidColor, Texture};
 use crate::types::{Color, P3};
 use crate::utility::{
     random_double, reflect, refract, sample_lambertian_scatter, sample_unit_vector,
 };
-use crate::texture::{SolidColor, Texture};
 use smolprng::{JsfLarge, PRNG};
+use std::sync::Arc;
 
 pub struct Lambertian {
     pub tex: Arc<dyn Texture>,
 }
 
-impl Lambertian{
-
-    pub fn from_color(c: Color) -> Self{
-        Self{tex: Arc::new(SolidColor{albedo: c})}
+impl Lambertian {
+    pub fn from_color(c: Color) -> Self {
+        Self {
+            tex: Arc::new(SolidColor { albedo: c }),
+        }
     }
 
-    pub fn from_texture(tex: Arc<dyn Texture>) -> Self{
-        Self{tex}
+    pub fn from_texture(tex: Arc<dyn Texture>) -> Self {
+        Self { tex }
     }
-
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
+    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> Option<(Ray, Color)> {
         let scatter_direction = sample_lambertian_scatter(&rec.normal, prng);
         let scattered = Ray {
             origin: rec.p,
             direction: scatter_direction.normalize(),
             time: r.time,
         };
-        let attenuation = self.tex.value(rec.u, rec.v,  &rec.p);
-        (true, scattered, attenuation)
+        let attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        Some((scattered, attenuation))
     }
 }
 
@@ -44,7 +44,7 @@ pub struct Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
+    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> Option<(Ray, Color)> {
         let mut reflected = r.direction.reflect(rec.normal);
         reflected = (reflected.normalize() + self.fuzz * sample_unit_vector(prng)).normalize();
 
@@ -53,13 +53,14 @@ impl Material for Metal {
             direction: reflected,
             time: r.time,
         };
+
         let attenuation = self.albedo;
 
-        (
-            rec.normal.dot(scattered.direction) > 0.0,
-            scattered,
-            attenuation,
-        )
+        if rec.normal.dot(scattered.direction) > 0.0 {
+            Some((scattered, attenuation))
+        } else {
+            None
+        }
     }
 }
 
@@ -83,7 +84,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
+    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> Option<(Ray, Color)> {
         let attenuation = Color::ONE;
 
         let ri = if rec.is_front_face {
@@ -112,32 +113,53 @@ impl Material for Dielectric {
             time: r.time,
         };
 
-        (true, scattered, attenuation)
+        Some((scattered, attenuation))
     }
 }
 
-
-struct DiffuseLight{
-    tex: Arc<dyn Texture>
+struct DiffuseLight {
+    tex: Arc<dyn Texture>,
 }
 
-impl DiffuseLight{
-
-    pub fn from_texture(tex: Arc<dyn Texture>) -> Self{
-        Self{tex}
+impl DiffuseLight {
+    pub fn from_texture(tex: Arc<dyn Texture>) -> Self {
+        Self { tex }
     }
 
-    pub fn from_color(c: Color) -> Self{
-        Self{tex: Arc::new(SolidColor{albedo: c})}
+    pub fn from_color(c: Color) -> Self {
+        Self {
+            tex: Arc::new(SolidColor { albedo: c }),
+        }
     }
 }
 
-impl Material for DiffuseLight{
-    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> (bool, Ray, Color) {
-        (false, Ray::new(), Color::ZERO)
+impl Material for DiffuseLight {
+    fn scatter(
+        &self,
+        _r: &Ray,
+        _rec: &HitRecord,
+        _prng: &mut PRNG<JsfLarge>,
+    ) -> Option<(Ray, Color)> {
+        None
     }
 
     fn emitted(&self, u: f64, v: f64, p: &P3) -> Color {
         self.tex.value(u, v, p)
+    }
+}
+
+struct Isotropic {
+    tex: Arc<dyn Texture>,
+}
+
+impl Material for Isotropic {
+    fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> Option<(Ray, Color)> {
+        let scattered = Ray {
+            origin: rec.p,
+            direction: sample_unit_vector(prng),
+            time: r.time,
+        };
+        let attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        Some((scattered, attenuation))
     }
 }

@@ -32,29 +32,40 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn ray_color(&self, r: &Ray, depth: usize, world: &BVHNode, prng: &mut PRNG<JsfLarge>) -> Color {
+    pub fn ray_color(
+        &self,
+        r: &Ray,
+        depth: usize,
+        world: &BVHNode,
+        prng: &mut PRNG<JsfLarge>,
+    ) -> Color {
         if depth == 0 {
             return Color::ZERO;
         }
 
-        let hit_rec = world.hit(r, &Interval::from(0.001, f64::MAX));
+        let hit_rec = world.hit(r, &Interval::from(0.001, f64::MAX), prng);
 
-        if hit_rec.is_none(){
+        if hit_rec.is_none() {
             return self.background;
         }
 
         let rec = hit_rec.unwrap();
 
         let color_from_emission = rec.material.emitted(rec.u, rec.v, &rec.p);
-        let (did_scatter, sray, scolor) = rec.material.scatter(r, &rec, prng);
 
-        if ! did_scatter{
+        let scatter_attempt = rec.material.scatter(r, &rec, prng);
+
+        if scatter_attempt.is_none() {
             return color_from_emission;
         }
 
-        let color_from_scatter = scolor * self.ray_color(&sray, depth - 1, world, prng);
-
-        color_from_scatter + color_from_emission
+        match scatter_attempt {
+            None => color_from_emission,
+            Some((sray, scolor)) => {
+                let color_from_scatter = scolor * self.ray_color(&sray, depth - 1, world, prng);
+                color_from_scatter + color_from_emission
+            }
+        }
     }
 
     pub fn render_pixel(&self, i: usize, j: usize, scene: &BVHNode) -> Color {
@@ -129,8 +140,8 @@ pub fn initialize_camera() -> Camera {
     let image_width = 1200;
     let image_height = 500;
     let aspect_ratio = image_width as f64 / image_height as f64;
-    let samples_per_pixel = 50;
-    let max_depth = 15;
+    let samples_per_pixel = 1000;
+    let max_depth = 25;
     let fov = 20.0f64;
 
     // camera point set up

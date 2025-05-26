@@ -18,6 +18,15 @@ pub fn random_double(prng: &mut PRNG<JsfLarge>) -> f64 {
     prng.gen_f64()
 }
 
+pub fn random_log_uniform(prng: &mut PRNG<JsfLarge>) -> f64 {
+    loop {
+        let x = prng.gen_f64().ln();
+        if x.is_finite() {
+            return x;
+        }
+    }
+}
+
 pub fn random_double_in_range(prng: &mut PRNG<JsfLarge>, min: f64, max: f64) -> f64 {
     prng.gen_f64().mul_add(max - min, min)
 }

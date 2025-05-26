@@ -4,17 +4,25 @@ use spt::hittable_list::HittableList;
 use spt::lambertian::{Dielectric, Lambertian, Metal};
 use spt::ray::Ray;
 use spt::sphere::Sphere;
+use spt::texture::{CheckerTexture, SolidColor};
 use spt::types::{Color, P3, V3};
 use spt::utility::{make_prng_default, random_double, random_double_in_range};
 use std::sync::Arc;
 use std::time::Instant;
-use spt::texture::{CheckerTexture, SolidColor};
 
-fn bounding_spheres() {
+fn main() {
     // World
     let mut world = HittableList::new();
 
-    let checker = Lambertian::from_texture(Arc::new(CheckerTexture{inv_scale: 0.32, even: Arc::new(SolidColor{albedo: Color::new(0.2, 0.3, 0.1)}), odd: Arc::new(SolidColor{albedo: Color::new(0.9, 0.9, 0.9)})}));
+    let checker = Lambertian::from_texture(Arc::new(CheckerTexture {
+        inv_scale: 0.32,
+        even: Arc::new(SolidColor {
+            albedo: Color::new(0.2, 0.3, 0.1),
+        }),
+        odd: Arc::new(SolidColor {
+            albedo: Color::new(0.9, 0.9, 0.9),
+        }),
+    }));
 
     world.add(Box::new(Sphere::static_sphere(
         P3::new(0.0, -1000.0, 0.0),
@@ -96,7 +104,10 @@ fn bounding_spheres() {
 
     let now = Instant::now();
 
-    // 19.799021 secs
+    // 87.5053476 secs
+    // Done Running!
+
+    // 4.5106428 secs
     // Done Running!
 
     camera.render(&world_bvh);
@@ -108,5 +119,3 @@ fn bounding_spheres() {
     println!("{} secs", delta);
     println!("Done Running!");
 }
-
-fn main() {}
