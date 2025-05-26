@@ -13,6 +13,7 @@ pub struct Sphere {
     pub center: Ray,
     pub radius: f64,
     pub mat: Arc<dyn Material>,
+    pub aabb: AABB,
 }
 
 impl Sphere {
@@ -23,18 +24,29 @@ impl Sphere {
             mat: Arc::new(Lambertian {
                 albedo: Color::new(0.5, 0.5, 0.5),
             }),
+            aabb: AABB::from_points(-P3::ONE, P3::ONE)
         }
     }
 
     pub fn from(center: Ray, radius: f64, mat: Arc<dyn Material>) -> Self {
+
+        let r_vec = V3::splat(radius);
+
+        let aabb1 = AABB::from_points(center.at(0.0) - r_vec, center.at(0.0) + r_vec);
+        let aabb2 = AABB::from_points(center.at(1.0) - r_vec, center.at(1.0) + r_vec);
+
         Self {
             center,
             radius,
             mat,
+            aabb: AABB::from_aabbs(&aabb1, &aabb2)
         }
     }
 
     pub fn static_sphere(center: P3, radius: f64, mat: Arc<dyn Material>) -> Self {
+
+        let r_vec = V3::splat(radius);
+
         Self {
             center: Ray {
                 origin: center,
@@ -43,6 +55,7 @@ impl Sphere {
             },
             radius,
             mat,
+            aabb: AABB::from_points(center - r_vec, center + r_vec)
         }
     }
 }
@@ -64,11 +77,12 @@ impl Hittable for Sphere {
         }
 
         let sqrtd = discriminant.sqrt();
+        let a_inv = 1.0 / a;
 
-        let mut root = (h - sqrtd) / a;
+        let mut root = (h - sqrtd) * a_inv;
 
         if !i.surrounds(root) {
-            root = (h + sqrtd) / a;
+            root = (h + sqrtd) *a_inv;
             if !i.surrounds(root) {
                 return None;
             }
@@ -83,11 +97,7 @@ impl Hittable for Sphere {
     }
 
     fn bounding_box(&self) -> AABB {
-        let r_vec = V3::splat(self.radius);
-
-        let aabb1 = AABB::from_points(self.center.at(0.0) - r_vec, self.center.at(0.0) + r_vec);
-        let aabb2 = AABB::from_points(self.center.at(1.0) - r_vec, self.center.at(1.0) + r_vec);
-        AABB::from_aabbs(&aabb1, &aabb2)
+        self.aabb
     }
 }
 

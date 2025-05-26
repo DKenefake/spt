@@ -122,11 +122,11 @@ impl Camera {
 }
 
 pub fn initialize_camera() -> Camera {
-    let image_width = 256*4;
-    let image_height = 144*4;
+    let image_width = 1200;
+    let image_height = 500;
     let aspect_ratio = image_width as f64 / image_height as f64;
-    let samples_per_pixel = 400;
-    let max_depth = 30;
+    let samples_per_pixel = 500;
+    let max_depth = 15;
     let fov = 20.0f64;
 
     // camera point set up

@@ -6,7 +6,6 @@ use spt::ray::Ray;
 use spt::sphere::Sphere;
 use spt::types::{Color, P3, V3};
 use spt::utility::{make_prng_default, random_double, random_double_in_range};
-use std::io;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -153,4 +152,6 @@ fn main() {
 
     println!("{} secs", delta);
     println!("Done Running!");
+
+
 }

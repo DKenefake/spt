@@ -1,6 +1,6 @@
 use crate::aabb::AABB;
 use crate::hit_record::HitRecord;
-use crate::hittable::Hittable;
+use crate::hittable::{Hittable, CannotHit};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use std::cmp::Ordering;
@@ -40,30 +40,25 @@ impl BVHNode {
 
         let axis = aabb.longest_axis();
 
-        let comparator = match axis {
-            0 => Self::x_compare,
-            1 => Self::y_compare,
-            _ => Self::z_compare,
-        };
-
         let object_span = end - start;
 
         let (left, right) = match object_span {
             1 => {
                 let first: Arc<dyn Hittable> = obj_list.remove(0).into();
-                (first.clone(), first)
+                let second: Arc<dyn Hittable> = Arc::new(CannotHit::new());
+                (first, second)
             }
             2 => {
                 let first: Arc<dyn Hittable> = obj_list.remove(0).into();
                 let second: Arc<dyn Hittable> = obj_list.remove(0).into();
 
-                match comparator(&*first, &*second) {
+                match Self::hittable_compare(&*first, &*second, axis) {
                     Ordering::Less => (first, second),
                     _ => (second, first),
                 }
             }
             _ => {
-                obj_list.sort_by(|x, y| comparator(&**x, &**y));
+                obj_list.sort_by(|x, y| Self::hittable_compare(&**x, &**y, axis));
                 let mid = start + object_span / 2;
 
                 let left: Arc<dyn Hittable> =
@@ -98,22 +93,12 @@ impl BVHNode {
         }
     }
 
-    pub fn x_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
-        Self::hittable_compare(a, b, 0)
-    }
-
-    pub fn y_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
-        Self::hittable_compare(a, b, 1)
-    }
-
-    pub fn z_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
-        Self::hittable_compare(a, b, 2)
-    }
 }
 
 impl Hittable for BVHNode {
     fn hit(&self, r: &Ray, i: &Interval) -> Option<HitRecord> {
-        if self.bounding_box.hit(r, i).is_none() {
+
+        if !self.bounding_box.hit(r, i) {
             return None;
         }
 
