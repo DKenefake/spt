@@ -1,12 +1,14 @@
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
+use crate::bvh::BVHNode;
 use crate::hittable::Hittable;
-use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::screen::Screen;
 use crate::types::{Color, P3, V3};
-use crate::utility::{linear_to_gamma, make_prng_from, random_double, sample_square, sample_unit_disc};
+use crate::utility::{
+    linear_to_gamma, make_prng_from, random_double, sample_square, sample_unit_disc,
+};
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 use smolprng::{JsfLarge, PRNG};
 
 pub struct Camera {
@@ -25,17 +27,11 @@ pub struct Camera {
     v: V3,
     w: V3,
     defocus_disk_u: V3,
-    defocus_disk_v: V3
+    defocus_disk_v: V3,
 }
 
 impl Camera {
-    pub fn ray_color(
-        r: &Ray,
-        depth: usize,
-        world: &HittableList,
-        prng: &mut PRNG<JsfLarge>,
-    ) -> Color {
-
+    pub fn ray_color(r: &Ray, depth: usize, world: &BVHNode, prng: &mut PRNG<JsfLarge>) -> Color {
         if depth == 0 {
             return Color::ZERO;
         }
@@ -57,7 +53,7 @@ impl Camera {
         (1.0 - a) * Color::ONE + a * Color::new(0.5, 0.7, 1.0)
     }
 
-    pub fn render_pixel(&self, i: usize, j: usize, scene: &HittableList) -> Color {
+    pub fn render_pixel(&self, i: usize, j: usize, scene: &BVHNode) -> Color {
         let mut prng = make_prng_from(((i + 1) * (j + 1)) as u64);
 
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
@@ -80,7 +76,7 @@ impl Camera {
         pixel_color
     }
 
-    pub fn render(&self, scene: &HittableList) {
+    pub fn render(&self, scene: &BVHNode) {
         let mut screen = Screen::from(self.image_width, self.image_height);
 
         let mut pixel_locs = Vec::new();
@@ -88,11 +84,14 @@ impl Camera {
         //Render
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                pixel_locs.push((i,j));
+                pixel_locs.push((i, j));
             }
         }
 
-        screen.screen_data = pixel_locs.into_par_iter().map(|(i,j)| self.render_pixel(i, j, scene)).collect();
+        screen.screen_data = pixel_locs
+            .into_par_iter()
+            .map(|(i, j)| self.render_pixel(i, j, scene))
+            .collect();
 
         let path = "output.ppm";
         screen.write(path);
@@ -104,7 +103,11 @@ impl Camera {
             + (i as f64 + offset.x) * self.pixel_delta_u
             + (j as f64 + offset.y) * self.pixel_delta_v;
 
-        let ray_origin = if self.defocus_angle <= 0.0 {self.camera_center} else {self.defocus_disk_sample(prng)};
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.camera_center
+        } else {
+            self.defocus_disk_sample(prng)
+        };
         let ray_direction = pixel_sample - ray_origin;
 
         let ray_time = random_double(prng);
@@ -112,18 +115,18 @@ impl Camera {
         Ray::from(&ray_origin, &ray_direction, ray_time)
     }
 
-    pub fn defocus_disk_sample(&self, prng: &mut PRNG<JsfLarge>) -> V3{
+    pub fn defocus_disk_sample(&self, prng: &mut PRNG<JsfLarge>) -> V3 {
         let p = sample_unit_disc(prng);
         self.camera_center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
     }
 }
 
 pub fn initialize_camera() -> Camera {
-    let image_width = 1200;
-    let image_height = 500;
+    let image_width = 256*4;
+    let image_height = 144*4;
     let aspect_ratio = image_width as f64 / image_height as f64;
-    let samples_per_pixel = 500;
-    let max_depth = 50;
+    let samples_per_pixel = 400;
+    let max_depth = 30;
     let fov = 20.0f64;
 
     // camera point set up
@@ -135,8 +138,8 @@ pub fn initialize_camera() -> Camera {
     let focus_dist = 10.4;
 
     // Camera
-    let theta:f64 = fov.to_radians();
-    let h = (theta/2.0).tan();
+    let theta: f64 = fov.to_radians();
+    let h = (theta / 2.0).tan();
     let viewport_height = 2.0 * h * focus_dist;
     let viewport_width = viewport_height * aspect_ratio;
     let camera_center = look_from;
@@ -155,11 +158,10 @@ pub fn initialize_camera() -> Camera {
     let pixel_delta_v = viewport_v / image_height as f64;
 
     // calculate the location of the upper left pixel
-    let viewport_upper_left =
-        camera_center - focus_dist*w - viewport_u / 2.0 - viewport_v / 2.0;
+    let viewport_upper_left = camera_center - focus_dist * w - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-    let defocus_radius = (defocus_angle/ 2.0f64).to_radians().tan() * focus_dist;
+    let defocus_radius = (defocus_angle / 2.0f64).to_radians().tan() * focus_dist;
     let defocus_disk_u = u * defocus_radius;
     let defocus_disk_v = v * defocus_radius;
 
@@ -179,6 +181,6 @@ pub fn initialize_camera() -> Camera {
         v,
         w,
         defocus_disk_u,
-        defocus_disk_v
+        defocus_disk_v,
     }
 }

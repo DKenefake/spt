@@ -3,6 +3,7 @@ use crate::ray::Ray;
 use crate::types::{P3, V3};
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct HitRecord {
     pub(crate) p: P3,
     pub normal: V3,

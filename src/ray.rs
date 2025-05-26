@@ -1,9 +1,10 @@
 use crate::types::{P3, V3};
 
+#[derive(Clone)]
 pub struct Ray {
     pub origin: P3,
     pub direction: V3,
-    pub time: f64
+    pub time: f64,
 }
 
 impl Ray {
@@ -19,7 +20,7 @@ impl Ray {
         Self {
             origin: *origin,
             direction: *direction,
-            time
+            time,
         }
     }
 

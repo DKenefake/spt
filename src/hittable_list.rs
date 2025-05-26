@@ -1,10 +1,11 @@
+use crate::aabb::AABB;
 use crate::hit_record::HitRecord;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
 
 pub struct HittableList {
-    objects: Vec<Box<dyn Hittable>>,
+    pub objects: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -52,8 +53,14 @@ impl Hittable for HittableList {
         }
         hr
     }
-}
 
-unsafe impl Sync for HittableList{
+    fn bounding_box(&self) -> AABB {
+        let mut list_aabb = AABB::new();
 
+        for obj in &self.objects {
+            list_aabb = AABB::from_aabbs(&list_aabb, &obj.bounding_box());
+        }
+
+        list_aabb
+    }
 }

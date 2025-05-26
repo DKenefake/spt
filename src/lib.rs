@@ -1,5 +1,7 @@
 #![warn(clippy::all, clippy::cargo, clippy::nursery)]
 
+pub mod aabb;
+pub mod bvh;
 pub mod camera;
 pub mod hit_record;
 pub mod hittable;
@@ -13,4 +15,3 @@ pub mod screen;
 pub mod sphere;
 pub mod types;
 pub mod utility;
-mod aabb;

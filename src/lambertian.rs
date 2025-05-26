@@ -17,7 +17,7 @@ impl Material for Lambertian {
         let scattered = Ray {
             origin: rec.p,
             direction: scatter_direction.normalize(),
-            time: r.time
+            time: r.time,
         };
         let attenuation = self.albedo;
         (true, scattered, attenuation)
@@ -37,7 +37,7 @@ impl Material for Metal {
         let scattered = Ray {
             origin: rec.p,
             direction: reflected,
-            time: r.time
+            time: r.time,
         };
         let attenuation = self.albedo;
 
@@ -60,7 +60,7 @@ impl Dielectric {
         (1.0 - r0).mul_add((1.0 - cos).powi(5), r0)
     }
 
-    pub fn fresnel_reflectance(&self, cos: f64) -> f64{
+    pub fn fresnel_reflectance(&self, cos: f64) -> f64 {
         //https://www.photometric.io/blog/improving-schlicks-approximation/
         let mut r0 = (1.0 - self.refraction_index) / (1.0 + self.refraction_index);
         r0 = r0 * r0;
@@ -95,7 +95,7 @@ impl Material for Dielectric {
         let scattered = Ray {
             origin: rec.p,
             direction,
-            time: r.time
+            time: r.time,
         };
 
         (true, scattered, attenuation)

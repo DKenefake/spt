@@ -16,6 +16,12 @@ impl Interval {
         Self { min, max }
     }
 
+    pub const fn from_intervals(a: &Self, b: &Self) -> Self {
+        let min = if a.min <= b.min { a.min } else { b.min };
+        let max = if a.max >= b.max { a.max } else { b.max };
+        Self { min, max }
+    }
+
     pub fn size(&self) -> f64 {
         self.max - self.min
     }
@@ -28,9 +34,12 @@ impl Interval {
         self.min < x && x < self.max
     }
 
-    pub fn expand(&self, delta: f64) -> Self{
+    pub fn expand(&self, delta: f64) -> Self {
         let padding = delta / 2.0;
-        Self{min: self.min - padding, max: self.max + padding}
+        Self {
+            min: self.min - padding,
+            max: self.max + padding,
+        }
     }
 
     pub const fn clamp(&self, x: f64) -> f64 {

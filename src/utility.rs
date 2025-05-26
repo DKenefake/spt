@@ -57,7 +57,7 @@ pub fn sample_lambertian_scatter(normal: &V3, prng: &mut PRNG<JsfLarge>) -> V3 {
     }
 }
 
-pub fn sample_unit_disc(prng: &mut PRNG<JsfLarge>) -> V3{
+pub fn sample_unit_disc(prng: &mut PRNG<JsfLarge>) -> V3 {
     let d = prng.disc2d();
     V3::new(d.0, d.1, 0.0)
 }
@@ -76,4 +76,3 @@ pub fn refract(uv: &V3, normal: &V3, ri: f64) -> V3 {
     let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * normal;
     r_out_perp + r_out_parallel
 }
-

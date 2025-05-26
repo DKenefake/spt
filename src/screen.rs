@@ -20,11 +20,11 @@ impl Screen {
         self.screen_data[x + y * self.width]
     }
 
-    pub fn set(&mut self, c: Color, x: usize, y: usize) -> () {
+    pub fn set(&mut self, c: Color, x: usize, y: usize) {
         self.screen_data[x + y * self.width] = c;
     }
 
-    pub fn write(&self, path: &str) -> () {
+    pub fn write(&self, path: &str) {
         let file = std::fs::File::create(path).unwrap();
         let mut writer = std::io::BufWriter::new(file);
 

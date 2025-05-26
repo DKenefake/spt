@@ -1,3 +1,4 @@
+use crate::aabb::AABB;
 use crate::hit_record::HitRecord;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
@@ -7,6 +8,7 @@ use crate::ray::Ray;
 use crate::types::{Color, P3, V3};
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct Sphere {
     pub center: Ray,
     pub radius: f64,
@@ -32,9 +34,13 @@ impl Sphere {
         }
     }
 
-    pub fn static_sphere(center: P3, radius: f64, mat: Arc<dyn Material>) -> Self{
+    pub fn static_sphere(center: P3, radius: f64, mat: Arc<dyn Material>) -> Self {
         Self {
-            center: Ray{ origin: center, direction: V3::ZERO, time: 0.0f64},
+            center: Ray {
+                origin: center,
+                direction: V3::ZERO,
+                time: 0.0f64,
+            },
             radius,
             mat,
         }
@@ -43,7 +49,6 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, i: &Interval) -> Option<HitRecord> {
-
         let current_center = self.center.at(r.time);
 
         let oc = current_center - r.origin;
@@ -75,6 +80,14 @@ impl Hittable for Sphere {
         hr.set_face_normal(r, &outward_normal);
 
         Some(hr)
+    }
+
+    fn bounding_box(&self) -> AABB {
+        let r_vec = V3::splat(self.radius);
+
+        let aabb1 = AABB::from_points(self.center.at(0.0) - r_vec, self.center.at(0.0) + r_vec);
+        let aabb2 = AABB::from_points(self.center.at(1.0) - r_vec, self.center.at(1.0) + r_vec);
+        AABB::from_aabbs(&aabb1, &aabb2)
     }
 }
 
