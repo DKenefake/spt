@@ -152,6 +152,4 @@ fn main() {
 
     println!("{} secs", delta);
     println!("Done Running!");
-
-
 }

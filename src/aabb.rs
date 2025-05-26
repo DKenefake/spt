@@ -12,22 +12,28 @@ impl AABB {
     pub const fn new() -> Self {
         Self {
             min: V3::ZERO,
-            max: V3::ONE
+            max: V3::ONE,
         }
     }
 
     pub const fn from(x: Interval, y: Interval, z: Interval) -> Self {
-        Self { min: V3::new(x.min, y.min, z.min), max: V3::new(x.max, y.max, z.max) }
+        Self {
+            min: V3::new(x.min, y.min, z.min),
+            max: V3::new(x.max, y.max, z.max),
+        }
     }
 
     pub fn from_points(a: P3, b: P3) -> Self {
-        Self{min: a.min(b), max: a.max(b)}
+        Self {
+            min: a.min(b),
+            max: a.max(b),
+        }
     }
 
     pub fn from_aabbs(a: &Self, b: &Self) -> Self {
         Self {
             min: a.min.min(b.min),
-            max: a.max.max(b.max)
+            max: a.max.max(b.max),
         }
     }
 
@@ -39,13 +45,12 @@ impl AABB {
         }
     }
 
-    pub fn longest_axis(&self) -> usize{
+    pub fn longest_axis(&self) -> usize {
         let delta = self.max - self.min;
         delta.max_position()
     }
 
     pub fn hit(&self, r: &Ray, i: &Interval) -> bool {
-
         let inv_d = r.direction.recip();
         let t0 = (self.min - r.origin) * inv_d;
         let t1 = (self.max - r.origin) * inv_d;
@@ -58,15 +63,15 @@ impl AABB {
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
 
     use crate::aabb::AABB;
-    use crate::ray::Ray;
     use crate::interval::Interval;
+    use crate::ray::Ray;
     use crate::types::{P3, V3};
 
     #[test]
-    fn check_unit_ray_unit_box(){
+    fn check_unit_ray_unit_box() {
         let ray = Ray::from(&P3::new(-10.0, 0.0, 0.0), &V3::X, 0.0);
 
         let mins = -V3::ONE;
@@ -77,5 +82,4 @@ mod tests{
 
         assert_eq!(does_hit, true);
     }
-
 }

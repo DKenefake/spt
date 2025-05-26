@@ -24,12 +24,11 @@ impl Sphere {
             mat: Arc::new(Lambertian {
                 albedo: Color::new(0.5, 0.5, 0.5),
             }),
-            aabb: AABB::from_points(-P3::ONE, P3::ONE)
+            aabb: AABB::from_points(-P3::ONE, P3::ONE),
         }
     }
 
     pub fn from(center: Ray, radius: f64, mat: Arc<dyn Material>) -> Self {
-
         let r_vec = V3::splat(radius);
 
         let aabb1 = AABB::from_points(center.at(0.0) - r_vec, center.at(0.0) + r_vec);
@@ -39,12 +38,11 @@ impl Sphere {
             center,
             radius,
             mat,
-            aabb: AABB::from_aabbs(&aabb1, &aabb2)
+            aabb: AABB::from_aabbs(&aabb1, &aabb2),
         }
     }
 
     pub fn static_sphere(center: P3, radius: f64, mat: Arc<dyn Material>) -> Self {
-
         let r_vec = V3::splat(radius);
 
         Self {
@@ -55,7 +53,7 @@ impl Sphere {
             },
             radius,
             mat,
-            aabb: AABB::from_points(center - r_vec, center + r_vec)
+            aabb: AABB::from_points(center - r_vec, center + r_vec),
         }
     }
 }
@@ -82,7 +80,7 @@ impl Hittable for Sphere {
         let mut root = (h - sqrtd) * a_inv;
 
         if !i.surrounds(root) {
-            root = (h + sqrtd) *a_inv;
+            root = (h + sqrtd) * a_inv;
             if !i.surrounds(root) {
                 return None;
             }

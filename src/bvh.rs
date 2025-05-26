@@ -1,6 +1,6 @@
 use crate::aabb::AABB;
 use crate::hit_record::HitRecord;
-use crate::hittable::{Hittable, CannotHit};
+use crate::hittable::{CannotHit, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use std::cmp::Ordering;
@@ -26,15 +26,10 @@ impl BVHNode {
         Self::make_level(obj_list, 0, obj_list.len())
     }
 
-    pub fn make_level(
-        obj_list: &mut Vec<Box<dyn Hittable>>,
-        start: usize,
-        end: usize,
-    ) -> Self {
-
+    pub fn make_level(obj_list: &mut Vec<Box<dyn Hittable>>, start: usize, end: usize) -> Self {
         let mut aabb = AABB::new();
 
-        for obj in obj_list.iter(){
+        for obj in obj_list.iter() {
             aabb = AABB::from_aabbs(&aabb, &obj.bounding_box());
         }
 
@@ -45,7 +40,7 @@ impl BVHNode {
         let (left, right) = match object_span {
             1 => {
                 let first: Arc<dyn Hittable> = obj_list.remove(0).into();
-                let second: Arc<dyn Hittable> = Arc::new(CannotHit::new());
+                let second: Arc<dyn Hittable> = first.clone();
                 (first, second)
             }
             2 => {
@@ -61,10 +56,8 @@ impl BVHNode {
                 obj_list.sort_by(|x, y| Self::hittable_compare(&**x, &**y, axis));
                 let mid = start + object_span / 2;
 
-                let left: Arc<dyn Hittable> =
-                    Arc::new(Self::make_level(obj_list, start, mid));
-                let right: Arc<dyn Hittable> =
-                    Arc::new(Self::make_level(obj_list, mid, end));
+                let left: Arc<dyn Hittable> = Arc::new(Self::make_level(obj_list, start, mid));
+                let right: Arc<dyn Hittable> = Arc::new(Self::make_level(obj_list, mid, end));
                 (left, right)
             }
         };
@@ -92,12 +85,10 @@ impl BVHNode {
             Ordering::Equal
         }
     }
-
 }
 
 impl Hittable for BVHNode {
     fn hit(&self, r: &Ray, i: &Interval) -> Option<HitRecord> {
-
         if !self.bounding_box.hit(r, i) {
             return None;
         }
