@@ -16,8 +16,8 @@ There is a struct, ``Screen``, that is used to hold all of the render data, and 
 
 Instead of passing ``mut`` or ``&mut`` arguments to be the output this has all been replaced with returning sensable outputs. The only place you will see that is for passing the random number generator.
 
-Instead of handrolling the Linear Algebra, I am using [glam](https://crates.io/crates/glam)
+Instead of handrolling the Linear Algebra, I am using [glam](https://crates.io/crates/glam).
 
-Instead of using 32 bit fp numbers e.g ``f32``, I am using 64 bit numbers ``f64``
+Instead of using 32 bit fp numbers e.g ``f32``, I am using 64 bit numbers ``f64``.
 
-Fixed pdf_value to behave correctly w.r.t. time
+Fixed pdf_value to behave correctly w.r.t. time for moving objects.
