@@ -20,3 +20,5 @@ Instead of passing ``mut`` or ``&mut`` arguments to be the output this has all b
 Instead of handrolling the Linear Algebra, I am using [glam](https://crates.io/crates/glam)
 
 Instead of using 32 bit fp numbers e.g ``f32``, I am using 64 bit numbers ``f64``
+
+Fixed pdf_value to behave correctly w.r.t. time
