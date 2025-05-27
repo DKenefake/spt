@@ -4,11 +4,11 @@ use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::lambertian::Lambertian;
 use crate::material::Material;
+use crate::onb::ONB;
 use crate::ray::Ray;
 use crate::types::{Color, P3, V3};
 use smolprng::{JsfLarge, PRNG};
 use std::sync::Arc;
-use crate::onb::ONB;
 
 #[derive(Clone)]
 pub struct Sphere {
@@ -66,15 +66,15 @@ impl Sphere {
         (u, v)
     }
 
-    fn random_to_sphere(rad: f64, dist_sqrd: f64, prng: &mut PRNG<JsfLarge>) -> V3{
+    fn random_to_sphere(rad: f64, dist_sqrd: f64, prng: &mut PRNG<JsfLarge>) -> V3 {
         let r1 = prng.gen_f64();
         let r2 = prng.gen_f64();
 
-        let z = 1.0 + r2 * ((1.0 - rad * rad / dist_sqrd).sqrt() -1.0);
+        let z = r2.mul_add((1.0 - rad * rad / dist_sqrd).sqrt() - 1.0, 1.0);
         let phi = 2.0 * std::f64::consts::PI * r1;
 
         let (phi_sin, phi_cos) = phi.sin_cos();
-        let z_sqrt = (1.0 - z*z).max(0.0);
+        let z_sqrt = z.mul_add(-z, 1.0).max(0.0);
         let x = phi_cos * z_sqrt;
         let y = phi_sin * z_sqrt;
 
@@ -128,17 +128,27 @@ impl Hittable for Sphere {
         self.aabb
     }
 
-    fn pdf_value(&self, origin: &P3, dir: &V3, time: f64,prng: &mut PRNG<JsfLarge>) -> f64 {
+    fn pdf_value(&self, origin: &P3, dir: &V3, time: f64, prng: &mut PRNG<JsfLarge>) -> f64 {
         // only works for stationary spheres!
 
-        let hit_rec = self.hit(&Ray{origin: *origin, direction: *dir, time}, &Interval::casting_default(), prng);
+        let hit_rec = self.hit(
+            &Ray {
+                origin: *origin,
+                direction: *dir,
+                time,
+            },
+            &Interval::casting_default(),
+            prng,
+        );
 
-        if hit_rec.is_none(){
+        if hit_rec.is_none() {
             return 0.0;
         }
 
         let dist_squared = (self.center.at(time) - origin).length_squared();
-        let cos_theta_max = (1.0 - self.radius*self.radius / dist_squared).max(0.0).sqrt();
+        let cos_theta_max = (1.0 - self.radius * self.radius / dist_squared)
+            .max(0.0)
+            .sqrt();
         let solid_angle = 2.0 * std::f64::consts::PI * (1.0 - cos_theta_max);
 
         1.0 / solid_angle

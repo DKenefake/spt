@@ -17,7 +17,7 @@ pub struct Quad {
     aabb: AABB,
     normal: V3,
     d: f64,
-    area: f64
+    area: f64,
 }
 
 impl Quad {
@@ -37,7 +37,7 @@ impl Quad {
             aabb,
             normal,
             d,
-            area
+            area,
         }
     }
 
@@ -90,8 +90,15 @@ impl Hittable for Quad {
     }
 
     fn pdf_value(&self, origin: &P3, dir: &V3, time: f64, prng: &mut PRNG<JsfLarge>) -> f64 {
-
-        let hit = self.hit(&Ray{origin: *origin, direction: *dir, time}, &Interval::casting_default(), prng);
+        let hit = self.hit(
+            &Ray {
+                origin: *origin,
+                direction: *dir,
+                time,
+            },
+            &Interval::casting_default(),
+            prng,
+        );
 
         match hit {
             None => 0.0,
@@ -102,10 +109,9 @@ impl Hittable for Quad {
                 dist_sqarted / (cosine * self.area)
             }
         }
-
     }
 
-    fn random(&self, origin: &P3, _time:f64, prng: &mut PRNG<JsfLarge>) -> V3 {
+    fn random(&self, origin: &P3, _time: f64, prng: &mut PRNG<JsfLarge>) -> V3 {
         let p = self.q + prng.gen_f64() * self.u + prng.gen_f64() * self.v;
         p - origin
     }

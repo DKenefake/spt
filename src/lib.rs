@@ -1,4 +1,5 @@
 #![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::perf)]
+#[allow(clippy::unused)]
 pub mod aabb;
 pub mod bvh;
 pub mod camera;
@@ -10,6 +11,8 @@ pub mod io;
 pub mod lambertian;
 pub mod material;
 pub mod medium;
+pub mod onb;
+pub mod pdf;
 pub mod perlin;
 pub mod quad;
 pub mod ray;
@@ -20,5 +23,3 @@ pub mod texture;
 pub mod translate;
 pub mod types;
 pub mod utility;
-pub mod onb;
-pub mod pdf;

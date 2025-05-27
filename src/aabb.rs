@@ -8,6 +8,12 @@ pub struct AABB {
     pub max: V3,
 }
 
+impl Default for AABB {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AABB {
     pub const fn new() -> Self {
         Self {

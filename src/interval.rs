@@ -16,8 +16,11 @@ impl Interval {
         Self { min, max }
     }
 
-    pub const fn casting_default() -> Self{
-        Self{min: 0.000001, max: f64::MAX}
+    pub const fn casting_default() -> Self {
+        Self {
+            min: 0.000001,
+            max: f64::MAX,
+        }
     }
 
     pub const fn from_intervals(a: &Self, b: &Self) -> Self {

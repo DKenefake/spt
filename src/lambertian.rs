@@ -1,12 +1,12 @@
 use crate::hit_record::HitRecord;
 use crate::material::{Material, ScatterRay};
+use crate::pdf::PDF;
 use crate::ray::Ray;
 use crate::texture::{SolidColor, Texture};
 use crate::types::{Color, P3};
 use crate::utility::{random_double, reflect, refract, sample_unit_vector};
 use smolprng::{JsfLarge, PRNG};
 use std::sync::Arc;
-use crate::pdf::PDF;
 
 pub struct Lambertian {
     pub tex: Arc<dyn Texture>,
@@ -26,14 +26,16 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, _r: &Ray, rec: &HitRecord, _prng: &mut PRNG<JsfLarge>) -> Option<ScatterRay> {
-        Some(ScatterRay::Scatter {pdf: PDF::cosine(&rec.normal), attenuation: self.tex.value(rec.u, rec.v, &rec.p)})
+        Some(ScatterRay::Scatter {
+            pdf: PDF::cosine(&rec.normal),
+            attenuation: self.tex.value(rec.u, rec.v, &rec.p),
+        })
     }
 
     fn scattering_pdf(&self, _r: &Ray, scattered: &Ray, rec: &HitRecord) -> f64 {
-        let cos_theta = rec.normal.dot( scattered.direction.normalize()).max(0.0);
+        let cos_theta = rec.normal.dot(scattered.direction.normalize()).max(0.0);
         cos_theta / std::f64::consts::PI
     }
-
 }
 
 pub struct Metal {
@@ -43,16 +45,19 @@ pub struct Metal {
 
 impl Material for Metal {
     fn scatter(&self, r: &Ray, rec: &HitRecord, prng: &mut PRNG<JsfLarge>) -> Option<ScatterRay> {
-
         let mut reflected = r.direction.normalize().reflect(rec.normal);
         reflected = (reflected.normalize() + self.fuzz * sample_unit_vector(prng)).normalize();
 
-        if reflected.dot(rec.normal) > 0.0{
+        if reflected.dot(rec.normal) > 0.0 {
             Some(ScatterRay::Specular {
-                specular_ray: Ray{origin: rec.p, direction: reflected, time: r.time},
-                attenuation: self.albedo
+                specular_ray: Ray {
+                    origin: rec.p,
+                    direction: reflected,
+                    time: r.time,
+                },
+                attenuation: self.albedo,
             })
-        }else{
+        } else {
             None
         }
     }
@@ -102,8 +107,12 @@ impl Material for Dielectric {
         };
 
         Some(ScatterRay::Specular {
-            specular_ray: Ray{origin: rec.p, direction, time: r.time},
-            attenuation
+            specular_ray: Ray {
+                origin: rec.p,
+                direction,
+                time: r.time,
+            },
+            attenuation,
         })
     }
 }
@@ -126,9 +135,9 @@ impl DiffuseLight {
 
 impl Material for DiffuseLight {
     fn emitted(&self, _r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &P3) -> Color {
-        if !rec.is_front_face{
+        if !rec.is_front_face {
             Color::ZERO
-        }else {
+        } else {
             self.tex.value(u, v, p)
         }
     }
@@ -142,7 +151,7 @@ impl Material for Isotropic {
     fn scatter(&self, _r: &Ray, rec: &HitRecord, _prng: &mut PRNG<JsfLarge>) -> Option<ScatterRay> {
         Some(ScatterRay::Scatter {
             pdf: PDF::sphere(),
-            attenuation: self.tex.value(rec.u, rec.v, &rec.p)
+            attenuation: self.tex.value(rec.u, rec.v, &rec.p),
         })
     }
 

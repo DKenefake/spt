@@ -13,6 +13,12 @@ pub struct SolidColor {
     pub albedo: Color,
 }
 
+impl Default for SolidColor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SolidColor {
     pub const fn new() -> Self {
         Self {

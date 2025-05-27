@@ -53,7 +53,7 @@ pub fn sample_unit_vector_on_hemisphere(normal: &V3, prng: &mut PRNG<JsfLarge>) 
     }
 }
 
-pub fn sample_cosine_direction(prng: &mut PRNG<JsfLarge>) -> V3{
+pub fn sample_cosine_direction(prng: &mut PRNG<JsfLarge>) -> V3 {
     let r1 = prng.gen_f64();
     let r2 = prng.gen_f64();
 
