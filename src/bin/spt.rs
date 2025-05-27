@@ -376,10 +376,89 @@ fn still_balls() {
     camera.render(&world_2);
 }
 
+fn simple_light() {
+    fn camera_set_up() -> (
+        usize,
+        usize,
+        usize,
+        usize,
+        f64,
+        DVec3,
+        DVec3,
+        DVec3,
+        f64,
+        f64,
+        DVec3,
+    ) {
+        let image_width = 2560;
+        let image_height = 1440;
+        let samples_per_pixel = 250;
+        let max_depth = 50;
+        let fov = 20.0f64;
+
+        let look_from = P3::new(26.0, 3.0, 6.0);
+        let look_at = P3::new(0.0, 2.0, 0.0);
+        let v_up = V3::new(0.0, 1.0, 0.0);
+
+        let defocus_angle = 0.0;
+        let focus_dist = 10.0;
+        let background = Color::new(0.0, 0.0, 0.0);
+
+        (
+            image_width,
+            image_height,
+            samples_per_pixel,
+            max_depth,
+            fov,
+            look_from,
+            look_at,
+            v_up,
+            defocus_angle,
+            focus_dist,
+            background,
+        )
+    }
+
+    let mut world = HittableList::new();
+
+    let solid_color = Arc::new(SolidColor {
+        albedo: Color::new(0.5, 0.5, 0.5),
+    });
+
+    let glass = Arc::new(Dielectric {
+        refraction_index: 1.1,
+    });
+
+    world.add(Box::new(Sphere::static_sphere(
+        P3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::new(Lambertian::from_texture(solid_color.clone())),
+    )));
+
+    world.add(Box::new(Sphere::static_sphere(
+        P3::new(0.0, 2.0, 0.0),
+        2.0,
+        Arc::new(Lambertian::from_texture(solid_color.clone())),
+    )));
+
+    let diff_mat = Arc::new(DiffuseLight::from_color(Color::new(4.0, 4.0, 4.0)));
+
+    world.add(Box::new(Quad::new(
+        P3::new(3.0, 1.0, -2.0),
+        2.0 * V3::X,
+        2.0 * V3::Y,
+        diff_mat,
+    )));
+
+    let camera = initialize_camera(camera_set_up());
+
+    camera.render(&world);
+}
+
 fn main() {
     let now = Instant::now();
 
-    still_balls();
+    simple_light();
 
     let stop = Instant::now();
 

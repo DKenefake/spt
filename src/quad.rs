@@ -52,7 +52,7 @@ impl Hittable for Quad {
     fn hit(&self, r: &Ray, i: &Interval, _prng: &mut PRNG<JsfLarge>) -> Option<HitRecord> {
         let denom = self.normal.dot(r.direction);
 
-        // if we are parallel we never hit
+        // if we are parallel, we never hit
         if denom.abs() <= 1E-12 {
             return None;
         }
@@ -64,7 +64,7 @@ impl Hittable for Quad {
             return None;
         }
 
-        // see if it is inside of the plane
+        // see if it is inside the plane
         let p = r.at(t);
 
         let planar_hitpt_vector = p - self.q;
