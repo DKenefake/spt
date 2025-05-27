@@ -2,8 +2,8 @@
 
 This is a simple ray tracing written in Rust based off the ray tracing in a weekend book series.
 
-![alt text](render.png "Title")
-
+![alt text](render.png "a render of balls")
+![alt text](simple_light.png "a render of a lightbox")
 
 ## Changes
 
