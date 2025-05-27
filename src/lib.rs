@@ -22,3 +22,4 @@ pub mod texture;
 pub mod translate;
 pub mod types;
 pub mod utility;
+pub mod renderer;

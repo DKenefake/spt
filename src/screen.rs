@@ -1,5 +1,7 @@
 use crate::types::Color;
 use std::io::Write;
+use std::path::Path;
+use image::{RgbImage, Rgb};
 
 pub struct Screen {
     pub(crate) screen_data: Vec<Color>,
@@ -24,7 +26,7 @@ impl Screen {
         self.screen_data[x + y * self.width] = c;
     }
 
-    pub fn write(&self, path: &str) {
+    pub fn write_ppm(&self, path: &str) {
         let file = std::fs::File::create(path).unwrap();
         let mut writer = std::io::BufWriter::new(file);
 
@@ -44,5 +46,22 @@ impl Screen {
                 .unwrap();
             }
         }
+    }
+    
+    pub fn write_png(&self, path: &str) {
+        
+        let mut img = RgbImage::new(self.width as u32, self.height as u32);
+        
+        for j in 0..self.height {
+            for i in 0..self.width {
+                let pixel_color = self.get(i, j);
+                let r = pixel_color.x as u8;
+                let g = pixel_color.y as u8;
+                let b = pixel_color.z as u8;
+                img.put_pixel(i as u32, j as u32, Rgb([r, g, b]));
+            }
+        }
+
+        img.save(Path::new(path)).unwrap()
     }
 }

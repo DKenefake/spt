@@ -11,6 +11,7 @@ use spt::types::{Color, P3, V3};
 use spt::utility::{make_prng_default, random_double, random_double_in_range};
 use std::sync::Arc;
 use std::time::Instant;
+use spt::renderer::{FullRenderer, NormalRenderer};
 
 fn quad_scene() {
     fn camera_set_up() -> (
@@ -97,7 +98,8 @@ fn quad_scene() {
 
     let camera = initialize_camera(camera_set_up());
 
-    camera.render(&world_bvh);
+    let renderer = FullRenderer{};
+    camera.render(&world_bvh, &renderer);
 }
 
 fn bouncing_balls() {
@@ -232,7 +234,8 @@ fn bouncing_balls() {
 
     let camera = initialize_camera(camera_set_up());
 
-    camera.render(&world_bvh);
+    let renderer = FullRenderer{};
+    camera.render(&world_bvh, &renderer);
 }
 
 fn still_balls() {
@@ -251,7 +254,7 @@ fn still_balls() {
     ) {
         let image_width = 2560;
         let image_height = 1440;
-        let samples_per_pixel = 2560;
+        let samples_per_pixel = 1;
         let max_depth = 100;
         let fov = 20.0f64;
 
@@ -373,7 +376,8 @@ fn still_balls() {
 
     let camera = initialize_camera(camera_set_up());
 
-    camera.render(&world_2);
+    let renderer = NormalRenderer{};
+    camera.render(&world_2, &renderer);
 }
 
 fn simple_light() {
@@ -392,7 +396,7 @@ fn simple_light() {
     ) {
         let image_width = 2560;
         let image_height = 1440;
-        let samples_per_pixel = 250;
+        let samples_per_pixel = 1;
         let max_depth = 50;
         let fov = 20.0f64;
 
@@ -451,14 +455,14 @@ fn simple_light() {
     )));
 
     let camera = initialize_camera(camera_set_up());
-
-    camera.render(&world);
+    let renderer = NormalRenderer{};
+    camera.render(&world, &renderer);
 }
 
 fn main() {
     let now = Instant::now();
 
-    simple_light();
+    still_balls();
 
     let stop = Instant::now();
 

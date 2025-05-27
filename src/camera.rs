@@ -1,7 +1,6 @@
 use crate::hittable::Hittable;
-use crate::interval::Interval;
-use crate::material::ScatterRay;
 use crate::ray::Ray;
+use crate::renderer::{Renderer, SceneDetails};
 use crate::screen::Screen;
 use crate::types::{Color, P3, V3};
 use crate::utility::{
@@ -33,56 +32,18 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn ray_color(
-        &self,
-        r: &Ray,
-        depth: usize,
-        world: &dyn Hittable,
-        prng: &mut PRNG<JsfLarge>,
-    ) -> Color {
-        if depth == 0 {
-            return Color::ZERO;
-        }
 
-        let hit_rec = world.hit(r, &Interval::from(0.001, f64::MAX), prng);
 
-        if hit_rec.is_none() {
-            return self.background;
-        }
-
-        let rec = hit_rec.unwrap();
-
-        let color_from_emission = rec.material.emitted(r, &rec, rec.u, rec.v, &rec.p);
-
-        let scatter_attempt = rec.material.scatter(r, &rec, prng);
-
-        match scatter_attempt {
-            None => color_from_emission,
-            Some(scatter) => match scatter {
-                ScatterRay::Specular {
-                    specular_ray,
-                    attenuation,
-                } => attenuation * self.ray_color(&specular_ray, depth - 1, world, prng),
-                ScatterRay::Scatter { pdf, attenuation } => {
-                    let scattered = Ray::from(&rec.p, &pdf.generate(r.time, prng), r.time);
-                    let pdf_value = pdf.value(&scattered.direction, r.time, prng);
-
-                    let sample_color = self.ray_color(&scattered, depth - 1, world, prng);
-                    let color_from_scatter = attenuation * pdf_value * sample_color / pdf_value;
-                    color_from_emission + color_from_scatter
-                }
-            },
-        }
-    }
-
-    pub fn render_pixel(&self, i: usize, j: usize, scene: &dyn Hittable) -> Color {
+    pub fn render_pixel(&self, i: usize, j: usize, scene: &dyn Hittable, renderer: &dyn Renderer) -> Color {
         let mut prng = make_prng_from(((i + 1) * (j + 1)) as u64);
-
+        let scene_details = SceneDetails {
+            background: self.background,
+        };
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
 
         for _ in 0..self.samples_per_pixel {
             let r = self.get_ray(i, j, &mut prng);
-            let mut in_flight = Self::ray_color(self, &r, self.max_depth, scene, &mut prng);
+            let mut in_flight = renderer.ray_color(&r, self.max_depth, scene, &scene_details, &mut prng);
 
             if !in_flight.x.is_finite() {
                 in_flight.x = 0.0;
@@ -112,7 +73,7 @@ impl Camera {
         pixel_color
     }
 
-    pub fn render(&self, scene: &dyn Hittable) {
+    pub fn render(&self, scene: &dyn Hittable, renderer :&dyn Renderer) {
         let mut screen = Screen::from(self.image_width, self.image_height);
 
         let mut pixel_locs = Vec::new();
@@ -126,11 +87,11 @@ impl Camera {
 
         screen.screen_data = pixel_locs
             .into_par_iter()
-            .map(|(i, j)| self.render_pixel(i, j, scene))
+            .map(|(i, j)| self.render_pixel(i, j, scene, renderer))
             .collect();
 
-        let path = "output.ppm";
-        screen.write(path);
+        let path = "output.png";
+        screen.write_png(path);
     }
 
     pub fn get_ray(&self, i: usize, j: usize, prng: &mut PRNG<JsfLarge>) -> Ray {
