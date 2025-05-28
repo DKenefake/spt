@@ -10,7 +10,7 @@ I am using [rayon](https://crates.io/crates/rayon) to parallelize rendering the 
 
 I am explicitly handing a random number generator (from [smolprng](https://github.com/DKenefake/smolprng)),
 so that the render is entirely deterministic, even with multi threading.
-This also helps with multithreading as each thread is not fighting for access for the same prng state.
+This also helps with multithreading as each thread is not fighting for access to the same prng state.
 
 I am using a different refraction model than the book, I am using instead the approximation proposed by the [photometric blog](https://www.photometric.io/blog/improving-schlicks-approximation/), over the standard [Schlick’s Approximation](https://en.wikipedia.org/wiki/Schlick%27s_approximation) of the fresnel equations.
 
