@@ -1,6 +1,6 @@
 # SPT
 
-This is a simple ray tracing written in Rust based off the ray tracing in a weekend book series.
+This is a simple ray tracing written in Rust based off the Peter Shirley's Ray Tracing in a Weekend book series.
 
 ![alt text](simple_light.png "a render of a lightbox 25k samples per pixel")
 
@@ -26,4 +26,4 @@ Instead of using 32 bit fp numbers e.g ``f32``, I am using 64 bit numbers ``f64`
 
 Fixed pdf_value to behave correctly w.r.t. time for moving objects.
 
-We are outputting the image as a png instead of ppm, this is done using the [image](https://crates.io/crates/image) crate.
+We are outputting the image as a ```.png``` instead of ```.ppm```, this is done using the [image](https://crates.io/crates/image) crate.
